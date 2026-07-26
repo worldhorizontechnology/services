@@ -1,0 +1,37 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #f7f8fb;
+  background: linear-gradient(135deg, #071522 0%, #11223a 100%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: #071522; color: #f7f8fb; }
+a { color: inherit; text-decoration: none; }
+.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.topbar { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.12); background: rgba(3, 14, 27, 0.75); backdrop-filter: blur(12px); }
+.brand { display: inline-flex; align-items: center; gap: 0.75rem; font-weight: 700; letter-spacing: 0.04em; }
+.brand-mark { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 999px; background: linear-gradient(135deg, #39c5ff, #2677ff); color: white; }
+.nav-links { display: flex; gap: 1rem; flex-wrap: wrap; }
+.nav-links a { color: #dce7f7; padding: 0.4rem 0.7rem; border-radius: 999px; transition: background 0.2s ease; }
+.nav-links a:hover, .nav-links .router-link-exact-active { background: rgba(57,197,255,0.16); color: white; }
+main { flex: 1; padding: 2rem; }
+.hero, .card-grid, .content-grid, .timeline, .contact-card { width: min(1120px, 100%); margin: 0 auto; }
+.hero { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); padding: 2rem; border-radius: 24px; display: grid; gap: 1rem; }
+.hero h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 0; }
+.hero p { font-size: 1.05rem; color: #dce7f7; margin: 0; max-width: 780px; }
+.section-title { font-size: 1.25rem; margin-bottom: 0.75rem; color: #8ad9ff; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+.card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 1.1rem; }
+.card h3 { margin-top: 0; }
+.content-grid { display: grid; grid-template-columns: 1.3fr 0.8fr; gap: 1.25rem; margin-top: 1.5rem; }
+.content-panel { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 1.2rem; }
+ul { padding-left: 1rem; }
+.site-footer { padding: 1.5rem 2rem 2rem; color: #8ea5c4; text-align: center; }
+.contact-card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 2rem; }
+@media (max-width: 720px) { main { padding: 1rem; } .topbar { flex-direction: column; gap: 0.75rem; } .content-grid { grid-template-columns: 1fr; } }

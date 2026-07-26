@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting…</title>
+    <script>
+      (() => {
+        const repoBase = '/worldhorizontechnology.gihub.io';
+        const path = window.location.pathname.replace(/\/+$/, '');
+        const route = path.startsWith(repoBase) ? path.slice(repoBase.length) : path;
+        const target = route && route !== '/' ? `/?p=${encodeURIComponent(route)}` : '/';
+        window.location.replace(`${repoBase}${target}`);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
