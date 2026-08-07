@@ -1,0 +1,619 @@
+﻿AI MULTI-AGENT BUSINESS AUTOMATION PLATFORM
+Unified Project Specification & Architecture Document
+Production-ready cloud-native platform • Google Cloud • Laravel CRM • Vue Frontends • Minimal AI Usage
+1. Назначение проекта
+Создать cloud-native платформу для автоматизации продаж, работы с клиентами, корпоративных знаний, записи на услуги, оплаты и маркетинговой аналитики. Архитектура является мультиагентной и микросервисной: AI-агенты используются только там, где требуется обработка неструктурированного текста, генерация или интеллектуальная интерпретация. Обычные бизнес-операции выполняются специализированными алгоритмическими сервисами без LLM.
+Платформа должна быть production-ready, modular, secure, scalable и AI-readable. Каждый сервис должен быть независимо разворачиваемым, тестируемым и обновляемым.
+2. Ключевые архитектурные принципы
+● Микросервисная архитектура вместо монолита.
+● Разделение AI Agents и обычных Backend Services.
+● Минимизация использования LLM для снижения стоимости эксплуатации.
+● Google Cloud как основная cloud-платформа.
+● Google Workspace как корпоративная среда документов и знаний.
+● Google Drive/Docs - источник корпоративной базы знаний; RAG использует её актуальное содержимое.
+● Laravel - корпоративный CRM и бизнес-портал.
+● Vue - отдельные frontend/landing-проекты.
+● Google Calendar - через отдельный Booking Service, а не напрямую из AI-агента.
+● Snowflake - центр аналитики, а не операционная база данных.
+● Все интеграции через API и чёткие сервисные контракты.
+● Docker-контейнеризация и независимые CI/CD pipelines.
+● Clean Architecture, SOLID, строгая типизация, автоматические тесты и security-by-design.
+3. AI-компоненты и обычные сервисы
+3.1. AI Agents
+● WhatsApp Sales Agent - клиентская коммуникация, RAG, рекомендации, сбор лидов.
+● Knowledge Agent - обработка неструктурированных внутренних знаний и подготовка обновлений базы знаний.
+● Meeting Intelligence Agent - обработка транскриптов встреч, извлечение решений, задач и требований.
+● Marketing AI - генерация предложений/акций на основе подготовленной аналитики.
+● RAG Agent/Layer - интеллектуальный поиск и контроль источников для AI-компонентов.
+3.2. Algorithmic Services
+● API Gateway
+● Auth Service
+● CRM Service
+● Booking Service
+● Payment Service
+● Competitor Scraper Service
+● Marketing Analytics Service
+● Analytics Service
+● Snowflake Connector Service
+● Notification Service
+● File Service
+● Knowledge/Indexing Service
+● Landing/API services
+Competitor Scraper Service не является AI-агентом: он выполняет обычный scraping, parsing, поиск компаний и сбор данных. Аналогично Booking, Payment, CRM, ETL, Calendar, notification и аналитические операции не должны вызывать LLM без отдельной необходимости.
+4. Основные пользовательские каналы
+4.1. WhatsApp
+● WhatsApp Business Cloud API принимает сообщения клиентов.
+● Sales Agent определяет намерение и при необходимости вызывает RAG.
+● Agent отвечает на вопросы о продуктах, услугах, ценах и условиях.
+● Agent собирает данные лида и передаёт их в CRM.
+● Для записи Agent обращается к Booking Service.
+● Для оплаты Agent/Frontend обращается к Payment Service только для продуктов/услуг, где действительно предусмотрена онлайн-оплата.
+4.2. Landing Pages
+● Lead Landing - заявка, обратный звонок, консультация.
+● Booking Landing - запись на услугу или встречу.
+● Sales Landing - покупка и онлайн-оплата.
+● Landing может содержать WhatsApp Widget и AI Chat Widget.
+4.3. Internal Telegram
+Telegram используется как внутренний канал согласования и передачи информации. Отдельный Telegram Service/Knowledge Agent работает с внутренними группами. Telegram также используется для согласования сгенерированных маркетинговых предложений перед публикацией.
+5. AI Agents
+5.1. WhatsApp Sales Agent
+● Приём сообщений через WhatsApp Business API.
+● Определение намерения клиента.
+● RAG-поиск по корпоративной базе знаний.
+● Ответы на вопросы о продуктах, услугах, ценах и FAQ.
+● Рекомендации продуктов.
+● Сбор имени, телефона, email, компании, интересующего продукта и комментария.
+● Создание/обновление лида через CRM API.
+● Вызов Booking Service при необходимости записи.
+● Вызов Payment Service только если конкретный сценарий поддерживает оплату.
+Sales Agent не изменяет Knowledge Base напрямую.
+5.2. Telegram Knowledge Agent
+● Подключение к внутренним Telegram-группам.
+● Выделение полезной бизнес-информации: продукты, цены, FAQ, инструкции, решения менеджеров, клиентские ответы и изменения.
+● Передача структурированных данных в Knowledge Service/Knowledge Agent.
+● Не должен самостоятельно публиковать непроверенные изменения в публичную базу знаний.
+5.3. Google Meet Intelligence Agent
+● Получение доступных транскриптов Google Meet.
+● Извлечение решений, задач, изменений продукта, требований клиентов и договорённостей.
+● Формирование структурированного knowledge update.
+● Передача результата в Knowledge Service.
+5.4. Marketing AI
+● Получает только подготовленные агрегированные данные от Marketing Analytics Service.
+● Формирует варианты акций, предложений или маркетинговых сообщений.
+● Передаёт предложение в Telegram для согласования.
+● После утверждения предложение передаётся в CRM/Landing Services.
+● Результаты кампании возвращаются в Snowflake для следующего аналитического цикла.
+6. Knowledge Base и RAG
+Google Drive является корпоративным хранилищем документов. Google Docs используется для редактируемого содержимого. База знаний включает каталог продуктов, цены, инструкции, техническую документацию, FAQ, sales materials, policies и marketing materials.
+Knowledge Update Flow
+Telegram / Google Meet
+        ↓
+Knowledge Processing
+        ↓
+Validation / Deduplication / Classification
+        ↓
+Google Drive / Google Docs
+        ↓
+Incremental Indexing
+        ↓
+Chunking + Embeddings
+        ↓
+Vector Database
+        ↓
+RAG Search
+        ↓
+Sales Agent / other AI components
+RAG должен сохранять метаданные источника и обеспечивать возможность определить, из какого документа и фрагмента получен контекст.
+7. CRM
+Laravel CRM является основной операционной системой управления клиентами и продажами.
+● Leads
+● Customers
+● Products
+● Sales Pipeline
+● Managers
+● Interactions / communication history
+● Bookings
+● Payments
+● Promotions
+● AI Agent logs
+● Knowledge Base viewer
+● Analytics dashboards
+● Lead source and promotion attribution
+● Customer status, включая new/repeat customer
+CRM не является заменой Snowflake. Операционные данные хранятся в PostgreSQL/Laravel, а аналитические данные и исторические события передаются в Snowflake.
+8. Booking Service и Google Calendar
+Booking Service является отдельным микросервисом. AI-агенты и frontend не работают с Google Calendar напрямую.
+● Получение свободных слотов.
+● Создание записи.
+● Отмена.
+● Перенос.
+● Синхронизация с Google Calendar.
+● Напоминания.
+● Проверка конфликтов.
+● API для CRM, Landing и AI Sales Agent.
+9. Payment Service
+Оплата является опциональным бизнес-сценарием. Не каждый landing или promotion должен иметь кнопку оплаты.
+● Sales Landing может использовать Payment Service.
+● Booking Landing использует Booking Service без обязательной оплаты.
+● Lead Landing может создавать лид без оплаты.
+● Payment events передаются в CRM и Snowflake.
+● Платёжная логика изолирована от Sales Agent и frontend.
+10. Competitor Scraper Service
+Competitor Scraper Service - обычный алгоритмический микросервис без LLM.
+● Получение координат/географической области.
+● Поиск компаний и конкурентов.
+● Использование Google Maps и доступных внешних источников.
+● Загрузка сайтов.
+● HTML parsing.
+● Извлечение цен, услуг, акций и других структурируемых данных.
+● Нормализация данных.
+● Передача результатов в Snowflake.
+● Плановый запуск через Scheduler.
+11. Marketing Analytics и цикл акций
+Competitor Scraper
+        ↓
+Snowflake
+        ↓
+Marketing Analytics Service
+        ↓
+Marketing AI
+        ↓
+Telegram Approval
+        ↓
+CRM / Landing
+        ↓
+Leads / Bookings / Payments / Sales
+        ↓
+Snowflake
+        ↓
+Marketing Analytics Service
+        ↓
+следующий цикл
+Marketing AI не должен получать необработанные большие таблицы Snowflake. Marketing Analytics Service предварительно рассчитывает агрегаты, KPI, сравнения и признаки, необходимые для генерации предложения.
+12. Snowflake
+Snowflake является центром аналитики и исторического хранения аналитических данных.
+● CRM data
+● Leads
+● Bookings
+● Payments
+● Sales
+● Landing analytics
+● Campaign statistics
+● Competitor scraping results
+● Promotion performance
+● Customer acquisition data
+Snowflake не используется как основная OLTP-база CRM или Booking Service.
+13. High-Level Architecture
+                    Google Workspace
+             ┌────────┬────────┬─────────┐
+             │ Drive  │ Docs   │ Meet    │
+             └───┬────┴───┬────┴────┬────┘
+                 │        │         │
+             Knowledge / Meeting / Telegram
+                 │
+          Knowledge Processing
+                 │
+          Google Drive Knowledge Base
+                 │
+       Chunking / Embeddings / Indexing
+                 │
+            Vector Database
+                 │
+              RAG Layer
+                 │
+WhatsApp → Sales Agent → CRM / Booking / Payment
+                 │
+              Customers
+
+Competitor Scraper → Snowflake ← CRM / Booking / Payment / Landing
+                         │
+              Marketing Analytics
+                         │
+                    Marketing AI
+                         │
+                 Telegram Approval
+                         │
+                  CRM / Landing
+14. Microservice Architecture
+● API Gateway
+● Auth Service
+● Sales Agent Service
+● RAG Service
+● Knowledge Service
+● Telegram Service
+● Meet Service
+● Booking Service
+● Payment Service
+● CRM Service (Laravel)
+● Landing Service / Vue frontend
+● Competitor Scraper Service
+● Marketing Service
+● Marketing Analytics Service
+● Analytics Service
+● Snowflake Connector Service
+● Notification Service
+● File Service
+Каждый сервис должен иметь собственный Dockerfile, тесты, конфигурацию, API-контракт и CI/CD pipeline. Общие библиотеки допускаются только для действительно общих контрактов и инфраструктурных компонентов; бизнес-логика сервисов не должна превращаться в общий монолитный пакет.
+15. Technology Stack
+AI Backend
+● Python 3.12+
+● FastAPI
+● Google ADK
+● Vertex AI Gemini
+● Pydantic v2
+● Google Workspace APIs
+● WhatsApp Business Cloud API
+● Telegram Bot API
+RAG
+● Embeddings
+● PostgreSQL + pgvector и/или Vertex AI Vector Search
+● Document processing pipeline
+● Retrieval evaluation
+Frontend
+● Vue 3
+● TypeScript
+● Vite
+● Pinia
+● Vue Router
+● Tailwind CSS
+● Axios
+Corporate CRM
+● Laravel 12
+● PHP 8.4
+● PostgreSQL
+● Laravel Sanctum
+● Laravel Queue
+● Laravel Scheduler
+● Filament
+Cloud
+● Google Cloud Run
+● Vertex AI
+● Artifact Registry
+● Cloud Storage
+● Secret Manager
+● Pub/Sub
+● Cloud Scheduler
+● Cloud Logging
+● Cloud Monitoring
+DevOps
+● Docker
+● GitHub Actions
+● Cloud Build
+16. Repository Structure
+platform/
+├── services/
+│   ├── api-gateway/
+│   ├── auth-service/
+│   ├── sales-agent/
+│   ├── rag-service/
+│   ├── knowledge-service/
+│   ├── telegram-service/
+│   ├── meet-service/
+│   ├── booking-service/
+│   ├── payment-service/
+│   ├── competitor-scraper/
+│   ├── marketing-service/
+│   ├── marketing-analytics/
+│   ├── analytics-service/
+│   ├── snowflake-connector/
+│   ├── notification-service/
+│   └── file-service/
+├── laravel-crm/
+├── frontend/
+│   ├── lead-landing/
+│   ├── booking-landing/
+│   └── sales-landing/
+├── infrastructure/
+│   ├── docker/
+│   ├── terraform/
+│   └── cloud-build/
+├── .github/
+│   └── workflows/
+└── docs/
+17. Engineering Requirements
+● Production-ready code.
+● Clean Architecture.
+● SOLID.
+● DDD where justified.
+● Dependency Injection.
+● Strict typing.
+● Pydantic validation.
+● Async Python where appropriate.
+● Clear service boundaries.
+● OpenAPI contracts.
+● Automatic API documentation.
+● Detailed docstrings for public interfaces.
+● Unit and integration tests.
+● Critical business logic covered by tests.
+● CI/CD for every deployable service.
+18. Security Requirements
+● OWASP Top 10.
+● OWASP ASVS where applicable.
+● Authentication and authorization.
+● IAM least privilege.
+● Secret Manager; no secrets in source code.
+● Webhook signature validation, включая WhatsApp.
+● Input validation and sanitization.
+● Rate limiting.
+● Audit logging.
+● RAG protection against prompt injection.
+● Source and permission validation before exposing knowledge.
+● Secure Google API credentials.
+● GitHub secret scanning.
+● Dependabot/dependency monitoring.
+● SAST: Bandit, Semgrep, CodeQL.
+● Container scanning: Trivy.
+● SBOM and supply-chain controls.
+19. AI Usage Policy
+LLM является дорогим ресурсом и не должен использоваться для задач, которые надёжно решаются обычным кодом.
+Без AI
+● Scraping and HTML parsing
+● Company search
+● Google Maps integration
+● ETL
+● CRM writes
+● Calendar operations
+● Payment operations
+● PDF generation
+● Notifications
+● API integrations
+● Data validation and deterministic transformations
+● Snowflake loading and aggregation
+С AI
+● Customer answers where natural-language interpretation is required
+● Meeting transcript processing
+● Extraction of knowledge from unstructured text
+● Marketing offer generation
+● Large-document summarization
+● Other tasks where deterministic algorithms are insufficient
+20. Copilot / AI-readable Requirements
+● Использовать официальные SDK и API, прежде всего официальный Google ADK и актуальные Google APIs.
+● Не использовать устаревшие API или неофициальные библиотеки без явной необходимости.
+● Сохранять модульность и границы сервисов.
+● Не добавлять LLM в обычный бизнес-сервис без обоснования.
+● Следовать SOLID, Clean Architecture и DDD там, где это оправдано.
+● Использовать строгую типизацию и понятные интерфейсы.
+● Публичные классы, функции, сервисы, tools и agents должны иметь docstrings.
+● Каждый сервис должен иметь README с назначением, API, конфигурацией и запуском.
+● Контракты между сервисами должны быть явно описаны через OpenAPI/JSON Schema.
+● Секреты запрещены в коде и git.
+● Перед добавлением новой зависимости проверять, существует ли официальное или уже используемое решение.
+● Критическая бизнес-логика должна иметь автоматические тесты.
+● Изменения должны быть локальными и не нарушать границы сервисов.
+21. CI/CD
+● GitHub Actions.
+● Ruff.
+● Black.
+● MyPy.
+● Pytest.
+● Coverage.
+● Bandit.
+● Semgrep.
+● CodeQL.
+● Trivy.
+● Docker build.
+● Artifact Registry.
+● Cloud Build / deployment to Cloud Run.
+● Versioning and rollback.
+22. UML / Architecture Diagrams
+22.1. Component Diagram
+@startuml
+actor Customer
+actor Manager
+
+component "WhatsApp Cloud API" as WA
+component "Telegram Service" as TG
+component "Google Meet" as Meet
+
+package "AI Layer" {
+  component "WhatsApp Sales Agent" as Sales
+  component "Knowledge Agent" as Knowledge
+  component "Meeting Intelligence Agent" as Meeting
+  component "Marketing AI" as MarketingAI
+  component "RAG Service" as RAG
+}
+
+package "Business Services" {
+  component "CRM Service" as CRM
+  component "Booking Service" as Booking
+  component "Payment Service" as Payment
+  component "Competitor Scraper" as Scraper
+  component "Marketing Analytics" as MarketingAnalytics
+  component "Notification Service" as Notify
+}
+
+database "PostgreSQL" as PG
+database "Snowflake" as SF
+database "Vector DB" as VDB
+cloud "Google Drive / Docs" as Drive
+cloud "Google Calendar" as Calendar
+
+WA --> Sales
+TG --> Knowledge
+Meet --> Meeting
+Sales --> RAG
+Sales --> CRM
+Sales --> Booking
+Sales --> Payment
+Knowledge --> Drive
+Meeting --> Drive
+Drive --> RAG
+RAG --> VDB
+CRM --> PG
+Booking --> Calendar
+CRM --> SF
+Booking --> SF
+Payment --> SF
+Scraper --> SF
+SF --> MarketingAnalytics
+MarketingAnalytics --> MarketingAI
+MarketingAI --> TG
+Manager --> CRM
+@enduml
+22.2. WhatsApp Sales Sequence
+@startuml
+actor Customer
+participant "WhatsApp Cloud API" as WA
+participant "Sales Agent" as Sales
+participant "RAG Service" as RAG
+participant "Vertex AI Gemini" as Gemini
+participant "CRM Service" as CRM
+participant "Booking Service" as Booking
+participant "Payment Service" as Payment
+
+Customer -> WA: Message
+WA -> Sales: Webhook
+Sales -> RAG: Search if knowledge is required
+RAG --> Sales: Relevant context + sources
+Sales -> Gemini: Generate answer
+Gemini --> Sales: Response
+Sales -> WA: Reply
+
+alt Lead
+  Sales -> CRM: Create/Update Lead
+end
+
+alt Booking
+  Sales -> Booking: Get slots / create booking
+  Booking --> Sales: Booking result
+end
+
+alt Payment
+  Sales -> Payment: Create payment session
+  Payment --> Sales: Payment link/status
+end
+@enduml
+22.3. Knowledge Update Sequence
+@startuml
+participant Telegram
+participant "Telegram Knowledge Agent" as TG
+participant "Meet Agent" as Meet
+participant "Knowledge Service" as KS
+participant "Google Drive/Docs" as Drive
+participant "RAG Indexer" as Index
+participant "Vector DB" as VDB
+
+Telegram -> TG: Internal messages
+TG -> KS: Structured knowledge candidate
+Meet -> KS: Meeting insights
+KS -> KS: Validate / deduplicate / classify
+KS -> Drive: Create/update document
+Drive -> Index: Changed document
+Index -> Index: Chunk + embed
+Index -> VDB: Upsert vectors
+@enduml
+22.4. Marketing Cycle
+@startuml
+participant "Competitor Scraper" as Scraper
+database Snowflake
+participant "Marketing Analytics Service" as Analytics
+participant "Marketing AI" as AI
+participant Telegram
+participant CRM
+participant Landing
+
+Scraper -> Snowflake: Store competitor data
+Analytics -> Snowflake: Read raw/operational analytics
+Analytics -> Analytics: Aggregate KPIs
+Analytics -> AI: Prepared insights
+AI -> Telegram: Promotion proposal
+Telegram -> AI: Approved
+AI -> CRM: Create promotion
+AI -> Landing: Publish approved promotion
+CRM -> Snowflake: Sales / lead / campaign data
+Landing -> Snowflake: Conversion data
+@enduml
+22.5. Deployment Diagram
+@startuml
+node "Google Cloud" {
+  node "Cloud Run" {
+    component "API Gateway"
+    component "AI Services"
+    component "Business Services"
+    component "Laravel CRM API"
+  }
+
+  database "PostgreSQL"
+  database "Snowflake"
+  database "Vector DB"
+
+  component "Vertex AI"
+  component "Secret Manager"
+  component "Pub/Sub"
+  component "Cloud Scheduler"
+  component "Cloud Logging"
+}
+actor Customer
+cloud "WhatsApp Cloud API"
+cloud "Google Workspace"
+cloud "Telegram"
+Customer --> "WhatsApp Cloud API"
+"WhatsApp Cloud API" --> "API Gateway"
+"API Gateway" --> "AI Services"
+"AI Services" --> "Vertex AI"
+"AI Services" --> "Vector DB"
+"Business Services" --> PostgreSQL
+"Business Services" --> Snowflake
+"AI Services" --> "Google Workspace"
+"Business Services" --> "Secret Manager"
+@enduml
+23. Additional UML Set
+Для полного проектирования должны быть подготовлены следующие диаграммы PlantUML:
+1. Use Case Diagram - полная бизнес-модель.
+2. Component Diagram - мультиагентная и микросервисная архитектура.
+3. Class Diagram - агенты, сервисы, ADK Tools, RAG и CRM.
+4. Deployment Diagram - Google Cloud.
+5. Sequence Diagram - WhatsApp Sales.
+6. Sequence Diagram - Telegram Knowledge.
+7. Sequence Diagram - Google Meet.
+8. Sequence Diagram - Booking.
+9. Sequence Diagram - Payment.
+10. Sequence Diagram - Marketing Promotion.
+11. Activity Diagram - Sales Agent.
+12. Activity Diagram - Knowledge Update.
+13. Package Diagram.
+14. ER Diagram - CRM.
+15. C4 Context.
+16. C4 Container.
+17. C4 Component.
+24. Documentation Set
+Данный документ является единой исходной спецификацией проекта. При необходимости из него могут быть выделены отдельные файлы для AI/Copilot-контекста:
+● PROJECT_OVERVIEW.md
+● SYSTEM_ARCHITECTURE.md
+● COPILOT_INSTRUCTIONS.md
+● SECURITY.md
+● AI_READABLE_PROJECT.md
+● CI_CD.md
+● PROJECT_TREE.md
+● IMPLEMENTATION_ROADMAP.md
+25. Implementation Roadmap
+18. Определить service boundaries и API contracts.
+19. Создать базовую Google Cloud инфраструктуру, Secret Manager, Artifact Registry, Cloud Run и CI/CD.
+20. Создать PostgreSQL и базовый Laravel CRM.
+21. Создать Booking Service и Google Calendar integration.
+22. Создать Payment Service как независимый опциональный компонент.
+23. Создать Google Drive/Docs knowledge pipeline.
+24. Создать RAG Service и vector storage.
+25. Создать WhatsApp Sales Agent.
+26. Создать Telegram Knowledge Service/Agent.
+27. Создать Google Meet Intelligence Agent.
+28. Создать Competitor Scraper без AI.
+29. Создать Snowflake analytics pipeline.
+30. Создать Marketing Analytics Service и Marketing AI.
+31. Создать Telegram approval flow.
+32. Создать Vue Lead/Booking/Sales landings.
+33. Добавить observability, security scanning, evaluation и production hardening.
+34. Провести integration, load, security и end-to-end testing.
+26. Definition of Done
+● Каждый deployable component имеет Dockerfile, конфигурацию, health checks и CI/CD.
+● API имеют OpenAPI/JSON Schema контракты.
+● Секреты отсутствуют в коде и репозитории.
+● Критические сценарии покрыты автоматическими тестами.
+● WhatsApp, CRM, Booking, Payment и Google Workspace интеграции работают через определённые интерфейсы.
+● RAG возвращает источники и проходит security/evaluation checks.
+● Competitor Scraper работает без LLM.
+● Snowflake получает необходимые аналитические события.
+● Marketing AI работает только с подготовленными агрегатами.
+● Публикация AI-сгенерированных акций требует Telegram approval.
+● Операционная и аналитическая базы данных разделены.
+● Система может масштабировать отдельные сервисы независимо.
