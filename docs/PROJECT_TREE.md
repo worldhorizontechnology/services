@@ -1,11 +1,10 @@
+```text
 PROJECT TREE
 
 1. Repository Structure
 
 platform/
 ├── services/
-│   ├── api-gateway/
-│   ├── auth-service/
 │   ├── sales-agent/
 │   ├── rag-service/
 │   ├── knowledge-service/
@@ -26,9 +25,9 @@ platform/
 │   ├── booking-landing/
 │   └── sales-landing/
 ├── infrastructure/
-│   ├── docker/
-│   ├── terraform/
-│   └── cloud-build/
-└── .github/
-    ├── workflows/
-    └── docs/
+│   └── docker/
+├── .github/
+│   └── workflows/
+└── docs/
+```
+
