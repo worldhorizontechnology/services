@@ -1,3 +1,3 @@
 PROJECT TREE
-16. Repository Structure
+1. Repository Structure
 platform/ ├── services/ │   ├── api-gateway/ │   ├── auth-service/ │   ├── sales-agent/ │   ├── rag-service/ │   ├── knowledge-service/ │   ├── telegram-service/ │   ├── meet-service/ │   ├── booking-service/ │   ├── payment-service/ │   ├── competitor-scraper/ │   ├── marketing-service/ │   ├── marketing-analytics/ │   ├── analytics-service/ │   ├── snowflake-connector/ │   ├── notification-service/ │   └── file-service/ ├── laravel-crm/ ├── frontend/ │   ├── lead-landing/ │   ├── booking-landing/ │   └── sales-landing/ ├── infrastructure/ │   ├── docker/ │   ├── terraform/ │   └── cloud-build/ ├── .github/ │   └── workflows/ └── docs/
