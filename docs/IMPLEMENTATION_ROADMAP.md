@@ -1,6 +1,6 @@
 # IMPLEMENTATION ROADMAP & DEFINITION OF DONE
 
-## 25. Implementation Roadmap
+## 1. Implementation Roadmap
 * Define service boundaries and API contracts.
 * Configure GCP Secret Manager, Artifact Registry, and Cloud Run within Free Tier limits, and set up GitHub Actions workflows.
 * Spin up the PostgreSQL database and develop the baseline Laravel CRM module.
@@ -19,7 +19,7 @@
 * Integrate open-source observability tools, free security scanners, evaluation frameworks, and production hardening.
 * Execute integration, load, security, and end-to-end (E2E) testing phases.
 
-## 26. Definition of Done
+## 2. Definition of Done
 * Every deployable component contains a valid Dockerfile, environment configuration, health check endpoints, and an active GitHub Actions workflow.
 * All APIs expose strict OpenAPI or JSON Schema contracts.
 * Environment secrets are completely isolated from source control and managed via GCP Secret Manager and GitHub Secrets.
