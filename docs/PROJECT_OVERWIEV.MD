@@ -1,5 +1,3 @@
-
-
 # AI MULTI-AGENT BUSINESS AUTOMATION PLATFORM — PROJECT OVERVIEW## 1. Project PurposeThe goal is to create a cloud-native platform for automating sales, customer relations, corporate knowledge, service booking, payments, and marketing analytics. The architecture is multi-agent and microservice-based: AI agents are utilized strictly for unstructured text processing, generation, or intelligent interpretation. Standard business operations are executed by specialized algorithmic services without LLM involvement.
 
 The platform must be production-ready, modular, secure, scalable, and AI-readable. Each service must be independently deployable, testable, and upgradable.
@@ -12,11 +10,4 @@ The platform must be production-ready, modular, secure, scalable, and AI-readabl
 ### 4.2. Landing Pages* **Lead Landing**: Captures requests, callback forms, and consultation bookings.* **Booking Landing**: Enables appointment scheduling or meeting bookings.* **Sales Landing**: Facilities product purchases and online payments.* **Widgets**: Landing pages can integrate a WhatsApp Widget and an AI Chat Widget.
 ### 4.3. Internal Telegram* **Internal Routing**: Telegram serves as the internal channel for approvals and information transfer.* **Internal Knowledge**: A dedicated Telegram Service/Knowledge Agent interacts with internal groups.* **Approval Workflow**: Telegram is used to approve generated marketing offers before they are published.
 
-If you'd like to adjust this markdown document, please let me know:
-
-* Should we refine the technical terminology for specific services?
-* Do you want to include tech stack versions (e.g., Laravel 11, Vue 3)?
-* Should we add a section for database choices (PostgreSQL, Redis, etc.)?
-
-I can expand the overview based on your project requirements.
 
