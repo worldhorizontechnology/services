@@ -4,6 +4,7 @@
 
 ### 1.1. Component Diagram
 
+```mermaid
 graph TB
     %% Actors
     Customer((Customer))
@@ -79,3 +80,4 @@ graph TB
     TG_Agent --> Payment
     Meet_Agent --> G_Drive
     G_Drive --> RAG
+    ```
