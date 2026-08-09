@@ -4,10 +4,78 @@
 
 ### 1.1. Component Diagram
 
-@startuml actor Customer actor Manager
-component "WhatsApp Cloud API" as WA component "Telegram Service" as TG component "Google Meet" as Meet
-package "AI Layer" { component "WhatsApp Sales Agent" as Sales component "Knowledge Agent" as Knowledge component "Meeting Intelligence Agent" as Meeting component "Marketing AI" as MarketingAI component "RAG Service" as RAG }
-package "Business Services" { component "CRM Service" as CRM component "Booking Service" as Booking component "Payment Service" as Payment component "Competitor Scraper" as Scraper component "Marketing Analytics" as MarketingAnalytics component "Notification Service" as Notify }
-database "PostgreSQL" as PG database "Snowflake" as SF database "Vector DB" as VDB cloud "Google Drive / Docs" as Drive cloud "Google Calendar" as Calendar
-WA --> Sales TG --> Knowledge Meet --> Meeting Sales --> RAG Sales --> CRM Sales --> Booking Sales --> Payment Knowledge --> Drive Meeting --> Drive Drive --> RAG RAG --> VDB CRM --> PG Booking --> Calendar CRM --> SF Booking --> SF Payment --> SF Scraper --> SF SF --> MarketingAnalytics MarketingAnalytics --> MarketingAI MarketingAI --> TG Manager --> CRM @enduml
+graph TB
+    %% Actors
+    Customer((Customer))
+    Manager((Manager))
 
+    %% External Services
+    WA_Cloud["WhatsApp Cloud API"]
+    TG_Service["Telegram Service"]
+    G_Meet["Google Meet"]
+    G_Drive["Google Drive / Docs"]
+    G_Calendar["Google Calendar"]
+
+    %% AI Layer Package
+    subgraph AI_Layer["AI Layer"]
+        WA_Agent["WhatsApp Sales Agent"]
+        TG_Agent["Knowledge Agent"]
+        Meet_Agent["Meeting Intelligence Agent"]
+        Mkt_AI["Marketing AI"]
+        RAG["RAG Service"]
+    end
+
+    %% Business Services Package
+    subgraph Business_Services["Business Services"]
+        CRM["CRM Service"]
+        Booking["Booking Service"]
+        Payment["Payment Service"]
+        Scraper["Competitor Scraper"]
+        Mkt_Analytics["Marketing Analytics"]
+        Notify["Notification Service"]
+    end
+
+    %% Databases
+    PG[("PostgreSQL")]
+    SF[("Snowflake")]
+    VDB[("Vector DB")]
+
+    %% Connections / Flows
+    Customer --> WA_Cloud
+    WA_Cloud --> WA_Agent
+    
+    Customer --> TG_Service
+    TG_Service --> TG_Agent
+    
+    G_Meet --> Meet_Agent
+    Meet_Agent --> RAG
+    
+    WA_Agent --> RAG
+    TG_Agent --> RAG
+    RAG --> VDB
+    
+    WA_Agent --> CRM
+    TG_Agent --> CRM
+    
+    CRM --> PG
+    
+    Booking --> G_Calendar
+    CRM --> Booking
+    Booking --> SF
+    
+    Payment --> SF
+    Scraper --> SF
+    
+    CRM --> SF
+    SF --> Mkt_Analytics
+    
+    Mkt_Analytics --> Mkt_AI
+    Mkt_AI --> Notify
+    
+    Notify --> TG_Service
+    TG_Service --> Manager
+    Manager --> CRM
+    
+    TG_Agent --> Payment
+    Meet_Agent --> G_Drive
+    G_Drive --> RAG
