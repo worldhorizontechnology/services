@@ -1,0 +1,22 @@
+
+
+# AI MULTI-AGENT BUSINESS AUTOMATION PLATFORM — PROJECT OVERVIEW## 1. Project PurposeThe goal is to create a cloud-native platform for automating sales, customer relations, corporate knowledge, service booking, payments, and marketing analytics. The architecture is multi-agent and microservice-based: AI agents are utilized strictly for unstructured text processing, generation, or intelligent interpretation. Standard business operations are executed by specialized algorithmic services without LLM involvement.
+
+The platform must be production-ready, modular, secure, scalable, and AI-readable. Each service must be independently deployable, testable, and upgradable.
+## 2. Key Architectural Principles* **Microservices Over Monolith**: Decoupled, specialized services.* **Separation of Concerns**: AI Agents are distinct from standard Backend Services.* **Cost Efficiency**: Minimize LLM usage to lower operational expenses.* **Primary Cloud Infrastructure**: Google Cloud Platform.* **Corporate Environment**: Google Workspace for documents and knowledge management.* **Dynamic RAG Source**: Google Drive/Docs serve as the knowledge base; RAG utilizes its live content.* **Business Portal**: Laravel acts as the corporate CRM and business portal.* **Frontend Solutions**: Vue for individual frontend/landing projects.* **Decoupled Booking**: Google Calendar is accessed via a dedicated Booking Service, never directly by an AI agent.* **Analytics Warehouse**: Snowflake acts as the analytics hub, not as an operational database.* **Integration Standards**: All integrations leverage APIs with strict service contracts.* **DevOps Standard**: Docker containerization with independent CI/CD pipelines.* **Development Excellence**: Clean Architecture, SOLID principles, strict typing, automated tests, and security-by-design.
+## 3. AI Components and Standard Services### 3.1. AI Agents* **WhatsApp Sales Agent**: Handles customer communication, RAG, recommendations, and lead collection.* **Knowledge Agent**: Processes unstructured internal knowledge and prepares knowledge base updates.* **Meeting Intelligence Agent**: Processes meeting transcripts to extract decisions, tasks, and requirements.* **Marketing AI**: Generates offers and promotions based on prepared analytics.* **RAG Agent/Layer**: Provides intelligent search and source control for AI components.
+### 3.2. Algorithmic Services* API Gateway* Auth Service* CRM Service* Booking Service* Payment Service* Competitor Scraper Service* Marketing Analytics Service* Analytics Service* Snowflake Connector Service* Notification Service* File Service* Knowledge/Indexing Service* Landing/API services
+
+*Note: The Competitor Scraper Service is not an AI agent; it performs standard scraping, parsing, company search, and data collection. Similarly, Booking, Payment, CRM, ETL, Calendar, notification, and analytical operations must not invoke LLMs unless absolutely necessary.*
+## 4. Primary User Channels### 4.1. WhatsApp* **Inbound Channel**: WhatsApp Business Cloud API receives customer messages.* **Intent Recognition**: Sales Agent determines intent and invokes RAG if necessary.* **Customer Support**: Agent answers questions regarding products, services, prices, and terms.* **Lead Generation**: Agent collects lead data and routes it to the CRM.* **Scheduling**: Agent communicates with the Booking Service to schedule appointments.* **Transactions**: Agent/Frontend interfaces with the Payment Service exclusively for products/services that require online payment.
+### 4.2. Landing Pages* **Lead Landing**: Captures requests, callback forms, and consultation bookings.* **Booking Landing**: Enables appointment scheduling or meeting bookings.* **Sales Landing**: Facilities product purchases and online payments.* **Widgets**: Landing pages can integrate a WhatsApp Widget and an AI Chat Widget.
+### 4.3. Internal Telegram* **Internal Routing**: Telegram serves as the internal channel for approvals and information transfer.* **Internal Knowledge**: A dedicated Telegram Service/Knowledge Agent interacts with internal groups.* **Approval Workflow**: Telegram is used to approve generated marketing offers before they are published.
+
+If you'd like to adjust this markdown document, please let me know:
+
+* Should we refine the technical terminology for specific services?
+* Do you want to include tech stack versions (e.g., Laravel 11, Vue 3)?
+* Should we add a section for database choices (PostgreSQL, Redis, etc.)?
+
+I can expand the overview based on your project requirements.
+
