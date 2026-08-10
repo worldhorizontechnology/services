@@ -22,7 +22,8 @@
 * **Testing Framework**: `Vitest` or `Jest` for API Gateway, Scraping, and Booking logic.
 
 ### 1.4. Global Cloud & Security Infrastructure
-* **Global Code Analysis**: GitHub CodeQL integrated into all repository workflows.
+
+* **Global Code Analysis**: GitHub CodeQL and Snyk are integrated into all repository workflows.
 * **Container Security**: Multi-stage Docker builds scanned via Trivy (FS & Container image layers).
 * **Artifact Deployment**: Secure authentication via Workload Identity Federation to Google Artifact Registry.
 * **Cloud Infrastructure**: Orchestrated deployment to Google Cloud Run utilizing Cloud Build.
