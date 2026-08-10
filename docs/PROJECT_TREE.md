@@ -21,9 +21,7 @@ platform/
 │   ├── file-service/
 │   └── laravel-crm/
 ├── frontend/
-│   ├── lead-landing/
-│   ├── booking-landing/
-│   └── sales-landing/
+│   ├── landing/
 ├── infrastructure/
 │   └── docker/
 ├── .github/
