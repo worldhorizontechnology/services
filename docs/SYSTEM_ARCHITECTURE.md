@@ -86,11 +86,15 @@ Must not independently publish unverified changes to the public knowledge base.
 The knowledge base includes a product catalog, pricing, instructions, technical documentation, FAQs, sales materials, policies, and marketing materials**.
 * **Knowledge Update Flow**
 ```text
-Telegram / Google Meet ↓ Knowledge Processing 
+Telegram / Google Meet
+↓
+Knowledge Processing 
 ↓ 
 Validation / Deduplication / Classification 
 ↓ 
-Google Drive / Google Docs ↓ Incremental Indexing 
+Google Drive / Google Docs
+↓
+Incremental Indexing 
 ↓
 Chunking + Embeddings ↓ Vector Database 
 ↓ 
