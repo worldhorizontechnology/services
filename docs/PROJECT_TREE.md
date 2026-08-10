@@ -20,8 +20,9 @@ platform/
 │   ├── notification-service/
 │   ├── file-service/
 │   └── laravel-crm/
-├── frontend/
+├── promo/
 │   ├── landing/
+│   ├── static-site/
 ├── infrastructure/
 │   └── docker/
 ├── .github/
