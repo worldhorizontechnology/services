@@ -62,3 +62,45 @@
 ### 2.5. Testing, Documentation & Auditing
 * **Documentation**: Automatic API documentation generated directly via OpenAPI definitions. Highly detailed docstrings for all public boundaries.
 * **Testing Matrix**: Mandatory unit and integration test suites. 100% of critical business logic and synchronization routines must be fully covered by automated regression tests.
+
+## 3. Infrastructure & Deployment Topology
+
+### 3.1. Infrastructure Allocation & Environments
+
+* **GitHub Pages**
+  * `Landings`
+
+* **Google Cloud Platform (GCP) — Cloud Run**
+  * **AI Agents**:
+    * `WhatsApp Sales Agent`
+    * `Knowledge Agent`
+    * `Meeting Intelligence Agent`
+    * `Marketing AI`
+    * `RAG Agent/Layer`
+  * **Algorithmic Services**:
+    * `API Gateway`
+    * `Auth Service`
+    * `CRM Service`
+    * `Booking Service`
+    * `Payment Service`
+    * `Competitor Scraper Service`
+    * `Marketing Analytics Service`
+    * `Analytics Service`
+    * `Snowflake Connector Service`
+    * `Notification Service`
+    * `File Service`
+    * `Knowledge/Indexing Service`
+
+* **Microsoft Azure — Free Tier Storage**
+  * `PostgreSQL`
+  * `Vector Database`
+
+### 3.2. Network Isolation & Cross-Cloud Optimization
+* **Connection Pooling**: Database clients must manage robust pooling mechanisms.
+* **Strict Timeouts**: Mandatory `connect_timeout=5s` across cross-cloud configurations.
+* **Encryption in Transit**: Laravel configurations must enforce `sslmode=require`.
+
+### 3.3. CI/CD Standards (GitHub Actions)
+* **Static Assets Delivery**: Native GitHub Pages deployment workflows forced weekly.
+* **Dockerized Delivery Pipeline**: Multi-stage, micro-layered Docker files for microservices.
+* **Canary Strategies**: Cloud Run revisions spin up with `--no-traffic`.
