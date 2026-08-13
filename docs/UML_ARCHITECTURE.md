@@ -83,7 +83,7 @@ graph TB
 ### 2.1 System Deployment/Beta Architecture Syntax
 
 ```mermaid
-architecture-beta
+graph TB
     %% Infrastructure Groups
     group github(logos:github-icon) [GitHub Infrastructure]
     group gcp(logos:google-cloud) [Google Cloud Platform]
