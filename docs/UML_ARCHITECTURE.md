@@ -1,4 +1,6 @@
 # UML / ARCHITECTURE DIAGRAMS
+
+### 1. Component diagram
 ```mermaid
 graph TB
     %% Actors / Clients
@@ -98,7 +100,7 @@ graph TB
     TG_Service -->|Manager Approves/Rejects| CRM_Svc
     CRM_Svc -->|Deploy approved promo| Landings
 ```
-### 2. System Deployment
+### 2. Deployment diagram
 ```mermaid
 graph LR
     classDef github fill:#181717,stroke:#fff,stroke-width:2px,color:#fff;
