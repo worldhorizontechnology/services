@@ -1,6 +1,7 @@
 # UML / ARCHITECTURE DIAGRAMS
 
 ### 1. Component diagram
+
 ```mermaid
 graph TB
     %% Actors / Clients
