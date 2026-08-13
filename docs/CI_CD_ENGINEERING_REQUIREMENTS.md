@@ -22,7 +22,6 @@
 * **Testing Framework**: `Vitest` or `Jest` for API Gateway, Scraping, and Booking logic.
 
 ### 1.4. Global Cloud & Security Infrastructure
-
 * **Global Code Analysis**: GitHub CodeQL and Snyk are integrated into all repository workflows.
 * **Container Security**: Multi-stage Docker builds scanned via Trivy (FS & Container image layers).
 * **Artifact Deployment**: Secure authentication via Workload Identity Federation to Google Artifact Registry.
@@ -49,6 +48,7 @@
 
 ### 2.3. Data Synchronization & Consistency (Sync)
 * **Incremental RAG Indexing**: Knowledge base updates must use webhooks (Google Drive Activity API) to trigger incremental, atomic chunk updates. Avoid wiping vector database collections; update only modified text blocks.
+* **Workspace Authentication**: Access to the Google Workspace infrastructure must be authenticated exclusively through dedicated GCP Service Accounts with narrow IAM scopes.
 * **State & Session Management**: AI Agent context and dialog states must be synchronized via a shared high-speed caching layer (Google Cloud Memorystore / Redis) to manage multi-message user sessions asynchronously.
 * **Distributed State Handling**: State changes affecting external systems (e.g., creating a booking in Google Calendar via Booking Service or capturing a payment) must implement the **Transactional Outbox Pattern** or idempotent API keys to avoid double-booking and out-of-sync states during network drops.
 * **Operational to Analytical Sync**: Replication of transaction events from PostgreSQL (Laravel) to Snowflake must be asynchronous (via Google Cloud Pub/Sub), ensuring zero performance impact on the operational database.
@@ -63,12 +63,14 @@
 * **Documentation**: Automatic API documentation generated directly via OpenAPI definitions. Highly detailed docstrings for all public boundaries.
 * **Testing Matrix**: Mandatory unit and integration test suites. 100% of critical business logic and synchronization routines must be fully covered by automated regression tests.
 
+---
+
 ## 3. Infrastructure & Deployment Topology
 
 ### 3.1. Infrastructure Allocation & Environments
 
 * **GitHub Pages**
-  * `Landings`
+  * `Landings` (Static frontend assets delivery)
 
 * **Google Cloud Platform (GCP) — Cloud Run**
   * **AI Agents**:
@@ -90,17 +92,21 @@
     * `Notification Service`
     * `File Service`
     * `Knowledge/Indexing Service`
+    * `Landing/API Services`
 
-* **Microsoft Azure — Free Tier Storage**
-  * `PostgreSQL`
-  * `Vector Database`
+* **Google Cloud Platform (GCP) — Managed Databases**
+  * **Google Cloud SQL (PostgreSQL)**: Primary operational database for CRM & Core Services.
+  * **Google Cloud Vertex AI Vector Search** (or managed Pinecone/Qdrant within GCP): High-performance vector database for RAG.
+  * **Google Cloud Memorystore (Redis)**: High-speed caching, distributed locking, and AI agent session/state storage.
 
-### 3.2. Network Isolation & Cross-Cloud Optimization
-* **Connection Pooling**: Database clients must manage robust pooling mechanisms.
-* **Strict Timeouts**: Mandatory `connect_timeout=5s` across cross-cloud configurations.
-* **Encryption in Transit**: Laravel configurations must enforce `sslmode=require`.
+### 3.2. Network Isolation & Security Optimization
+* **Connection Pooling**: Database clients must manage robust connection pooling mechanisms to avoid exhaustion.
+* **Strict Timeouts**: Mandatory `connect_timeout=5s` across all inter-service and cloud database configurations.
+* **Encryption in Transit & Rest**: All service-to-database connections must enforce `sslmode=require` with strict certificate validation.
+* **Service Account Access**: IAM roles must follow the principle of least privilege. Cloud Run services communicate with Google Workspace via strictly scoped GCP Service Accounts.
 
 ### 3.3. CI/CD Standards (GitHub Actions)
-* **Static Assets Delivery**: Native GitHub Pages deployment workflows forced weekly.
-* **Dockerized Delivery Pipeline**: Multi-stage, micro-layered Docker files for microservices.
-* **Canary Strategies**: Cloud Run revisions spin up with `--no-traffic`.
+* **Static Assets Delivery**: Native GitHub Pages deployment workflows forced weekly or on main branch updates.
+* **Dockerized Delivery Pipeline**: Multi-stage, micro-layered Dockerfiles optimized for Cloud Run deployments.
+* **Canary Strategies**: Cloud Run revisions spin up with `--no-traffic`. Traffic routing is incrementally adjusted to 100% only after a successful automated health verification.
+
