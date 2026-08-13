@@ -81,10 +81,16 @@ Must not independently publish unverified changes to the public knowledge base.
 
 # 4. Knowledge Base and RAG
    
-* **Google Drive is a corporate document repository**.
-* **Google Docs is used for editable content**. 
-The knowledge base includes a product catalog, pricing, instructions, technical documentation, FAQs, sales materials, policies, and marketing materials**.
-* **Knowledge Update Flow**
+
+* **Google Workspace Infrastructure:** The entire corporate knowledge base is fully hosted within the **Google Workspace** ecosystem.
+* **Access Control:** Connection, authentication, and secure data extraction from Google Workspace are strictly managed via **GCP Service Accounts** with the principle of least privilege.
+* **Source Repositories:** 
+  * **Google Drive** acts as the central corporate document repository.
+  * **Google Docs** is utilized for managing editable and dynamic content.
+* **Scope of Data:** The knowledge base includes a product catalog, pricing, instructions, technical documentation, FAQs, sales materials, policies, and marketing materials.
+* **RAG Source Control:** RAG must preserve source metadata, ensuring the system can always trace exactly which document and fragment the retrieved context is derived from.
+
+### Knowledge Update Flow
 ```text
 Telegram / Google Meet
 ↓
@@ -92,17 +98,18 @@ Knowledge Processing
 ↓ 
 Validation / Deduplication / Classification 
 ↓ 
-Google Drive / Google Docs
+Google Drive / Google Docs (via GCP Service Accounts)
 ↓
 Incremental Indexing 
 ↓
-Chunking + Embeddings ↓ Vector Database 
+Chunking + Embeddings 
+↓ 
+Vector Database 
 ↓ 
 RAG Search 
 ↓
 Sales Agent / other AI components
 ```
-* **RAG should preserve source metadata and provide the ability to determine which document and fragment the context is derived from**.
 
 # 5. CRM
    
