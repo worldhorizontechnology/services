@@ -80,48 +80,7 @@ graph TB
     G_Drive --> RAG
    
 ```
-### 2.1 System Deployment/Beta Architecture Syntax
-
-```mermaid
-graph TB
-    %% Infrastructure Groups
-    group github(logos:github-icon) [GitHub Infrastructure]
-    group gcp(logos:google-cloud) [Google Cloud Platform]
-    group azure(logos:microsoft-azure) [Azure Cloud Free Tier]
-
-    %% Components: GitHub Cloud
-    service gh_pages(logos:github-octocat) in github [Vue.js Static Landing]
-    service gh_actions(logos:github-actions) in github [GitHub Actions CI/CD]
-
-    %% Components: GCP Compute (Cloud Run)
-    service gw_node(logos:nodejs-icon) in gcp [API Gateway / Node.js]
-    service crm_laravel(logos:laravel) in gcp [CRM Service / PHP Octane]
-    service sales_agent(logos:python) in gcp [WhatsApp Sales Agent]
-    service know_agent(logos:python) in gcp [Knowledge Agents]
-    service algo_services(logos:javascript) in gcp [Algorithmic Services]
-
-    %% Components: Azure Data Tier
-    service db_postgres(logos:postgresql) in azure [Managed PostgreSQL]
-    service rag_vector(logos:azure) in azure [Vector Database / RAG]
-
-    %% CI/CD Delivery Paths
-    gh_actions:R -- L: gh_pages [Builds & Pushes Static Web]
-    gh_actions:B -- T: gw_node [Docker Build & Deploy]
-    gh_actions:B -- T: crm_laravel [Docker Build & Deploy]
-    gh_actions:B -- T: sales_agent [Docker Build & Deploy]
-
-    %% Network & Request Routing
-    gh_pages:B -- T: gw_node [REST API Requests]
-    gw_node:R -- L: sales_agent [Routes Internal REST Traffic]
-    gw_node:R -- L: crm_laravel [Routes Internal REST Traffic]
-    gw_node:R -- L: algo_services [Routes Internal REST Traffic]
-
-    %% Cross-Cloud Data Layer Connections
-    crm_laravel:B -- T: db_postgres [Secure SQL Connection via TLS]
-    sales_agent:B -- T: rag_vector [External Vector Embeddings Lookup]
-    know_agent:B -- T: rag_vector [Incremental Index Upserts]
-```
-### 2.2  System Deployment/Legacy Standard Syntax
+### 2. System Deployment
 
 ```mermaid
 graph LR
