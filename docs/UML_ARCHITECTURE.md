@@ -157,3 +157,78 @@ graph LR
     Algo -->|Asynchronous Data Sync| Snowflake
     AI & Algo <-->|OAuth2 API Access via GCP Service Accounts| Workspace_API
 ```
+
+### 3. Use case diagram
+```mermaid
+graph TB
+    %% Actors
+    Customer((Customer))
+    Manager((Manager))
+    Scheduler((System Scheduler))
+
+    %% System Boundary
+    subgraph Platform["AI Multi-Agent Business Automation Platform"]
+        
+        %% WhatsApp Sales Agent Module (Section 3.1 & 4.1)
+        subgraph SalesModule["WhatsApp Sales & Communication"]
+            UC_Msg["Consult Product Catalog / FAQ"]
+            UC_Lead["Automatically Collect & Register Lead"]
+            UC_Slot["View Available Booking Slots"]
+            UC_Book["Book Service / Appointment"]
+            UC_Pay["Process Online Payment (Optional)"]
+        end
+
+        %% Knowledge & RAG Module (Section 3.1, 3.3, 4.3 & 6)
+        subgraph KnowledgeModule["Knowledge Base & AI Ingestion"]
+            UC_TG_Intel["Extract Knowledge from Internal Telegram Groups"]
+            UC_Meet_Intel["Analyze & Parse Google Meet Transcripts"]
+            UC_RAG_Search["Execute Intelligent RAG Context Search"]
+            UC_Index["Perform Incremental Indexing of Google Drive/Docs"]
+        end
+
+        %% Marketing Automation & Scraper Module (Section 3.1, 3.4, 10 & 11)
+        subgraph MarketingModule["Marketing Automation & Competitor Scraping"]
+            UC_Scrape["Scrape Competitor Data Algorithmically (No LLM)"]
+            UC_Gen_Promo["Generate AI Marketing Promotion Proposals"]
+            UC_Approve["Review & Approve Promotions via Telegram"]
+            UC_Pub_Promo["Publish Approved Promotions to CRM & Landings"]
+        end
+
+        %% CRM & Analytics Dashboard Module (Section 7 & 12)
+        subgraph AdminModule["CRM & Operations Dashboard"]
+            UC_View_CRM["Manage Operational Data (Leads, Pipelines, Bookings)"]
+            UC_View_Logs["Monitor AI Agent Activity & Interoperability Logs"]
+            UC_View_KB["View Corporate Knowledge Base Structure"]
+            UC_View_BI["Access Cross-Platform Analytics (Snowflake Dashboard)"]
+        end
+    end
+
+    %% Customer Relationships
+    Customer --> UC_Msg
+    Customer --> UC_Book
+    Customer --> UC_Pay
+
+    %% Internal Include / Flow Dependencies
+    UC_Msg -.->|&lt;&lt;include&gt;&gt;| UC_RAG_Search
+    UC_Msg -.->|&lt;&lt;extend&gt;&gt;| UC_Lead
+    UC_Book -.->|&lt;&lt;include&gt;&gt;| UC_Slot
+    
+    UC_TG_Intel -.->|&lt;&lt;include&gt;&gt;| UC_Index
+    UC_Meet_Intel -.->|&lt;&lt;include&gt;&gt;| UC_Index
+
+    %% System Scheduler Relationships
+    Scheduler --> UC_Scrape
+    Scheduler --> UC_Index
+
+    %% Marketing Cycle Flow
+    UC_Scrape -.->|&lt;&lt;flows into&gt;&gt;| UC_Gen_Promo
+    UC_Gen_Promo -.->|&lt;&lt;include&gt;&gt;| UC_Approve
+    UC_Approve -.->|&lt;&lt;flows into&gt;&gt;| UC_Pub_Promo
+
+    %% Manager Relationships
+    Manager --> UC_Approve
+    Manager --> UC_View_CRM
+    Manager --> UC_View_Logs
+    Manager --> UC_View_KB
+    Manager --> UC_View_BI
+```
