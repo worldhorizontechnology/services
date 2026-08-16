@@ -144,3 +144,51 @@ The Booking Service is a separate microservice. AI agents and the frontend do no
 
 # 7. Payment Service
 **Payment is an optional business scenario. Not every landing page or promotion needs to have a payment button**.
+
+# 8. Technology Stack
+
+## **Backend Framework**
+- Laravel (current stable version)
+- (WebSocket support)
+
+### **Database & Cache**
+- PostgreSQL 12+ (primary)
+- Redis (Channels layer - upgradeable)
+- SQLite3 (fallback/testing)
+
+### **AI/ML Services**
+- Vertex AI Gemini API (Gemini models)
+- Vertex AI Model Garden (OSS LLMs + embeddings)
+- Google GenAI ADK (Model invocation & tooling)
+- Python (current stable version)
+
+
+### **External Services**
+- Stripe (payment processing)
+- Google Workspace (RAG)
+- Snowflake (Analytics)
+
+### **Frontend**
+- HTML/CSS/JavaScript
+- Vue
+- 
+### **Scraping service**
+- Python
+
+---
+
+## Data Flow Examples
+
+### **Lead generation/Consultation Booking Flow**
+```
+Customer
+  ↓
+Sees landing in Facebook/Instagram
+  ↓
+Clicks the button to WhatsApp following
+  ↓
+Conversates with Sales Bot (answers questions to share data/asks questions to get products info)
+  ↓
+Books consultation through a calendar
+  
+```
