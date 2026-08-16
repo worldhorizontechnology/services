@@ -1,0 +1,46 @@
+name: Regenerate and validate manifests
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    paths:
+      - 'manifests/**'
+      - 'manifests_md/**'
+      - 'tools/parse_md_to_manifest.py'
+      - '.github/workflows/regenerate-manifests.yml'
+
+jobs:
+  regenerate:
+    name: Regenerate and validate manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Regenerate manifests (check mode)
+        # This will compare generated manifests with committed ones and fail if they differ
+        run: |
+          python tools/parse_md_to_manifest.py --source manifests_md --out manifests --check
+
+      - name: Show git diff if any (for easier debugging)
+        if: failure()
+        run: |
+          echo "===== GIT STATUS ====="
+          git status --porcelain --untracked-files=no || true
+          echo "===== GIT DIFF ====="
+          git --no-pager diff -- manifests || true
