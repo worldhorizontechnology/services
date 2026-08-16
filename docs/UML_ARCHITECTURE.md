@@ -160,75 +160,87 @@ graph LR
 
 ### 3. Use case diagram
 ```mermaid
-graph TB
-    %% Actors
-    Customer((Customer))
-    Manager((Manager))
-    Scheduler((System Scheduler))
+usecaseDiagram
+    %% --- ACTORS (Strictly from Section 4, 10, 11) ---
+    actor Customer as "Customer"
+    actor Manager as "Manager"
 
-    %% System Boundary
+    %% --- REAL EXTERNAL CHANNELS (Section 4) ---
+    actor WhatsAppAPI as "WhatsApp Business Cloud API"
+    actor TelegramBotAPI as "Telegram Bot API"
+
+    %% --- PLATFORM BOUNDARY ---
     subgraph Platform["AI Multi-Agent Business Automation Platform"]
-        
-        %% WhatsApp Sales Agent Module (Section 3.1 & 4.1)
-        subgraph SalesModule["WhatsApp Sales & Communication"]
-            UC_Msg["Consult Product Catalog / FAQ"]
-            UC_Lead["Automatically Collect & Register Lead"]
-            UC_Slot["View Available Booking Slots"]
-            UC_Book["Book Service / Appointment"]
-            UC_Pay["Process Online Payment (Optional)"]
+
+        %% 3.1. AI Agents: WhatsApp Sales Agent (Section 4.1, 5.1)
+        subgraph WhatsAppSalesAgent["Subsystem: services/sales-agent"]
+            usecase UC_Determine_Intent as "Determining customer intent"
+            usecase UC_RAG_Search as "RAG search of the corporate knowledge base"
+            usecase UC_Collect_Data as "Collecting name, phone number, email, company, product of interest, and comments"
+            usecase UC_Call_Booking as "Calling the Booking Service"
+            usecase UC_Call_Payment as "Calling the Payment Service"
         end
 
-        %% Knowledge & RAG Module (Section 3.1, 3.3, 4.3 & 6)
-        subgraph KnowledgeModule["Knowledge Base & AI Ingestion"]
-            UC_TG_Intel["Extract Knowledge from Internal Telegram Groups"]
-            UC_Meet_Intel["Analyze & Parse Google Meet Transcripts"]
-            UC_RAG_Search["Execute Intelligent RAG Context Search"]
-            UC_Index["Perform Incremental Indexing of Google Drive/Docs"]
+        %% 3.1. AI Agents: Telegram Knowledge Agent & Google Meet Intelligence Agent (Section 5.2, 5.3, 6)
+        subgraph KnowledgeMeetAgents["Subsystem: knowledge-&-rag-services"]
+            usecase UC_Highlight_Info as "Highlighting useful business information"
+            usecase UC_Extract_Meet as "Extracts decisions, tasks, product changes, customer requirements, and agreements"
+            usecase UC_Transfer_KS as "Transferring structured data to the Knowledge Service"
+            usecase UC_Incremental_Indexing as "Incremental Indexing (Chunking + Embeddings)"
         end
 
-        %% Marketing Automation & Scraper Module (Section 3.1, 3.4, 10 & 11)
-        subgraph MarketingModule["Marketing Automation & Competitor Scraping"]
-            UC_Scrape["Scrape Competitor Data Algorithmically (No LLM)"]
-            UC_Gen_Promo["Generate AI Marketing Promotion Proposals"]
-            UC_Approve["Review & Approve Promotions via Telegram"]
-            UC_Pub_Promo["Publish Approved Promotions to CRM & Landings"]
+        %% 3.2. Algorithmic Services (Section 7, 8, 9)
+        subgraph AlgorithmicServices["Subsystem: algorithmic-business-services & laravel-crm"]
+            usecase UC_Create_Lead as "Creating/updating a lead via the CRM API"
+            usecase UC_Booking_Operations as "Getting free slots / Creating an appointment / Syncing with Google Calendar"
+            usecase UC_Payment_Operations as "Payment operations"
         end
 
-        %% CRM & Analytics Dashboard Module (Section 7 & 12)
-        subgraph AdminModule["CRM & Operations Dashboard"]
-            UC_View_CRM["Manage Operational Data (Leads, Pipelines, Bookings)"]
-            UC_View_Logs["Monitor AI Agent Activity & Interoperability Logs"]
-            UC_View_KB["View Corporate Knowledge Base Structure"]
-            UC_View_BI["Access Cross-Platform Analytics (Snowflake Dashboard)"]
+        %% 3.2. Algorithmic Services: Competitor Scraper Service (Section 10)
+        subgraph ScraperService["Subsystem: services/competitor-scraper"]
+            usecase UC_Scraper_Ops as "Standard scraping, parsing, company search, and data collection"
+        end
+
+        %% 3.1. AI Agents: Marketing AI (Section 3.4, 11)
+        subgraph MarketingSubsystem["Subsystem: services/marketing-service & analytics"]
+            usecase UC_Gen_Options as "Generates options for promotions, offers, or marketing messages"
+            usecase UC_Sub_Telegram as "Submits the proposal to Telegram for approval"
         end
     end
 
-    %% Customer Relationships
-    Customer --> UC_Msg
-    Customer --> UC_Book
-    Customer --> UC_Pay
+    %% --- ACTOR ASSOCIATIONS (Section 4) ---
+    Customer --> UC_Determine_Intent
+    Customer --> UC_Call_Booking
+    Customer --> UC_Call_Payment
 
-    %% Internal Include / Flow Dependencies
-    UC_Msg -.->|&lt;&lt;include&gt;&gt;| UC_RAG_Search
-    UC_Msg -.->|&lt;&lt;extend&gt;&gt;| UC_Lead
-    UC_Book -.->|&lt;&lt;include&gt;&gt;| UC_Slot
-    
-    UC_TG_Intel -.->|&lt;&lt;include&gt;&gt;| UC_Index
-    UC_Meet_Intel -.->|&lt;&lt;include&gt;&gt;| UC_Index
+    %% External System Webhook Inbound Lines
+    WhatsAppAPI --> UC_Determine_Intent
+    TelegramBotAPI --> UC_Highlight_Info
 
-    %% System Scheduler Relationships
-    Scheduler --> UC_Scrape
-    Scheduler --> UC_Index
+    %% Manager Interactions
+    Manager --> UC_Sub_Telegram
+    Manager --> UC_Create_Lead : "Manual CRM Operations"
 
-    %% Marketing Cycle Flow
-    UC_Scrape -.->|&lt;&lt;flows into&gt;&gt;| UC_Gen_Promo
-    UC_Gen_Promo -.->|&lt;&lt;include&gt;&gt;| UC_Approve
-    UC_Approve -.->|&lt;&lt;flows into&gt;&gt;| UC_Pub_Promo
+    %% --- INTERNAL CODE EXECUTIONS (Strict UML Stereotypes) ---
+    %% Sales Agent Internal Logic Flow (Section 5.1)
+    UC_Determine_Intent ..> UC_RAG_Search : <<include>>
+    UC_Determine_Intent ..> UC_Collect_Data : <<extend>>
 
-    %% Manager Relationships
-    Manager --> UC_Approve
-    Manager --> UC_View_CRM
-    Manager --> UC_View_Logs
-    Manager --> UC_View_KB
-    Manager --> UC_View_BI
+    %% Knowledge Base Pipeline Logic Flow (Section 6)
+    UC_Highlight_Info ..> UC_Transfer_KS : <<include>>
+    UC_Extract_Meet ..> UC_Transfer_KS : <<include>>
+    UC_Transfer_KS ..> UC_Incremental_Indexing : <<include>>
+
+    %% Marketing AI Internal Logic Flow (Section 11)
+    UC_Gen_Options ..> UC_Sub_Telegram : <<include>>
+
+    %% --- INTER-SERVICE API CALLS (Solid Contract Lines) ---
+    %% Sales Agent executing API calls against independent algorithmic business endpoints
+    UC_Collect_Data --> UC_Create_Lead : "API: Create/Update Lead"
+    UC_Call_Booking --> UC_Booking_Operations : "API: Request Booking"
+    UC_Call_Payment --> UC_Payment_Operations : "API: Request Payment"
+
+    %% Marketing AI pushing state to CRM after approval cycle succeeds
+    UC_Sub_Telegram --> UC_Create_Lead : "API: Transfer approved proposal to CRM/Landing"
+
 ```
