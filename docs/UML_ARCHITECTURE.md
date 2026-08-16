@@ -242,5 +242,4 @@ usecaseDiagram
 
     %% Marketing AI pushing state to CRM after approval cycle succeeds
     UC_Sub_Telegram --> UC_Create_Lead : "API: Transfer approved proposal to CRM/Landing"
-
 ```
