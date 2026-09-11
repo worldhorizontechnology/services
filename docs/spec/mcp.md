@@ -152,32 +152,101 @@ sequenceDiagram
 
 ```
 
----
 
-Проблема была в длинных цепочках инлайн-кода и переносах строк внутри ячеек. Вот пересобранная таблица с компактной версткой — теперь она гарантированно рендерится ровно и без разрывов:
 
 ## 5. Tool Catalog & Capabilities
 
 | Domain | Tool Name | Description | Key Parameters |
 | --- | --- | --- | --- |
-| **CRM** | `create_customer` | Creates or updates customer record.
+| CRM | create_customer | Creates or updates customer record.
 
- | `name`, `phone`, `email`, `channelId`, `campaignId`, `entryPoint`<br> |
-| **CRM** | `create_channel` | Registers an acquisition source in channels.
-
- | `name`, `type` (`online`/`offline`)
+ | name, phone, email, channelId, campaignId, entryPoint
 
  |
-| **CRM** | `create_campaign` | Registers a marketing promotion in campaigns.
+| CRM | create_channel | Registers an acquisition source in channels.
 
- | `channelId`, `name`, `promoCode`, `budget`<br> |
-| **CRM** | `assign_executor_to_order` | Assigns an executor to an order in assignments.
+ | name, type (online/offline)
 
- | `orderId`, `executorId`, `startDate`, `dueDate`<br> |
-| **CRM (Orchestrator)** | `create_complete_service_booking` | Atomically executes full booking chain.
+ |
+| CRM | create_campaign | Registers a marketing promotion in campaigns.
 
- | `customerName`, `customerPhone`, `serviceId`, `executorId`, `scheduledStartAt`<br> |
-| **Workspace** | `search_workspace_info` | Queries knowledge base, prices, and policies. | `query` |
-| **Calendar** | `check_calendar_slots` | Fetches available time slots from Google Calendar. | `master_name`, `date` (`YYYY-MM-DD`) |
-| **Calendar** | `book_calendar_slot` | Books an event slot directly in Google Calendar. | `master_name`, `datetime_start`, `client_name`, `igsid` |
+ | channelId, name, promoCode, budget
 
+ |
+| CRM | assign_executor_to_order | Assigns an executor to an order in assignments.
+
+ | orderId, executorId, startDate, dueDate
+
+ |
+| CRM (Orchestrator) | create_complete_service_booking | Atomically executes full booking chain.
+
+ | customerName, customerPhone, serviceId, executorId, scheduledStartAt
+
+ |
+| Workspace | search_workspace_info | Queries knowledge base, prices, and policies. | query |
+| Calendar | check_calendar_slots | Fetches available time slots from Google Calendar. | master_name, date (YYYY-MM-DD) |
+| Calendar | book_calendar_slot | Books an event slot directly in Google Calendar. | master_name, datetime_start, client_name, igsid |
+
+---
+
+### Альтернативный вид (Текстовый список для спецификации)
+
+* **CRM — `create_customer**`
+
+* **Описание:** Creates or updates customer record in customers table.
+
+
+* **Параметры:** `name`, `phone`, `email`, `channelId`, `campaignId`, `entryPoint`
+
+
+
+* **CRM — `create_channel**`
+
+* **Описание:** Registers an acquisition source in channels table.
+
+
+* **Параметры:** `name`, `type` (`online`/`offline`)
+
+
+
+
+* **CRM — `create_campaign**`
+
+* **Описание:** Registers a marketing promotion in campaigns table.
+
+
+* **Параметры:** `channelId`, `name`, `promoCode`, `budget`
+
+
+
+* **CRM — `assign_executor_to_order**`
+
+* **Описание:** Assigns an executor user to an order in assignments table.
+
+
+* **Параметры:** `orderId`, `executorId`, `startDate`, `dueDate`
+
+
+
+* **CRM (Orchestrator) — `create_complete_service_booking**`
+
+* **Описание:** Atomically executes full booking chain: Customer -> Order -> Order_Service -> Assignment.
+
+
+* **Параметры:** `customerName`, `customerPhone`, `serviceId`, `executorId`, `scheduledStartAt`
+
+
+
+* **Workspace — `search_workspace_info**`
+* **Описание:** Queries company knowledge base, service catalog, prices, and policies.
+* **Параметры:** `query`
+
+
+* **Calendar — `check_calendar_slots**`
+* **Описание:** Fetches available time slots for a specialist on a date from Google Calendar.
+* **Параметры:** `master_name`, `date` (`YYYY-MM-DD`)
+
+
+* **Calendar — `book_calendar_slot**`
+* **Описание:** Books an event slot directly in Google Calendar.
+* **Параметры:** `master_name`, `datetime_start`, `client_name`, `igsid`
