@@ -14,7 +14,8 @@ async def main():
     
     # 
     dp.include_router(qa_router)
-    dp.include_router(meetings_router)
+    #dp.include_router(meetings_router)
+    dp.include_router(schedules_router)
     
     # 
     await mcp.connect()
