@@ -28,6 +28,7 @@ async def main():
         hour=9, 
         kwargs={'bot': bot}
     )
+    scheduler.add_job(check_schedules, 'cron', day_of_week='fri', hour=15, minute=0)
     scheduler.start()
     
     # Запуск поллинга
