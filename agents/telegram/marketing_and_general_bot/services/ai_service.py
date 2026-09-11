@@ -35,4 +35,18 @@ class AIService:
         docs = await asyncio.to_thread(self.vector_store.similarity_search, query, k=k)
         return "\n".join([d.page_content for d in docs])
 
+    async def negotiate_schedule(self, master_message: str, calendar_slots: dict) -> str:
+        """LLM обрабатывает сообщение мастера, анализирует свободные часы и подбирает время."""
+        prompt = f"""
+        Ты — администратор-координатор студии. Мастер пишет в чат графиков: "{master_message}".
+        Текущие данные по свободным слотам и загрузке мастеров из Google Календаря: {calendar_slots}
+        
+        Твоя задача:
+        1. Понять, какое время предлагает мастер или какие у него вопросы по графику.
+        2. Вежливо и конструктивно предложить свободные часы или подтвердить заполнение слота.
+        3. Если время согласовано, явно укажи дату и время для системы.
+        """
+        response = await self.llm.generate_content_async(prompt)
+        return response.text
+
 ai_service = AIService()
