@@ -154,6 +154,8 @@ sequenceDiagram
 
 ---
 
+Извини, разметка поползла из-за переносов внутри ячеек! Вот полностью исправленная и валидная таблица Markdown — каждая строчка строго в одной линии, разрывов больше нет:
+
 ## 5. Tool Catalog & Capabilities
 
 | Domain | Tool Name | Description | Key Parameters |
