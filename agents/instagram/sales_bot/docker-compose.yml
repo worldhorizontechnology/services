@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  ig_bot:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - META_VERIFY_TOKEN=${META_VERIFY_TOKEN}
+      - META_PAGE_ACCESS_TOKEN=${META_PAGE_ACCESS_TOKEN}
+      # URL of the Symfony MCP Server microservice
+      - MCP_SERVER_SSE_URL=http://symfony-mcp-server:8000/mcp
+    restart: unless-stopped
