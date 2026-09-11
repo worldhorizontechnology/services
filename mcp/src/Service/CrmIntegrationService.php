@@ -39,6 +39,24 @@ class CrmIntegrationService
         return $this->post('/bookings/complete-transaction', $payload);
     }
 
+    public function createOrder(array $orderData): string
+{
+    $response = $this->httpClient->request('POST', "{$this->crmUrl}/orders", [
+        'headers' => [
+            'Authorization' => "Bearer {$this->apiToken}",
+            'Accept' => 'application/json',
+        ],
+        'json' => $orderData,
+    ]);
+
+    if ($response->getStatusCode() === 201 || $response->getStatusCode() === 200) {
+        $result = $response->toArray();
+        return "Order successfully created in CRM. Order ID: " . ($result['order_id'] ?? 'OK');
+    }
+
+    return "Failed to create order in CRM: " . $response->getContent(false);
+}
+
     private function post(string $endpoint, array $data): string
     {
         $response = $this->httpClient->request('POST', "{$this->crmUrl}{$endpoint}", [
