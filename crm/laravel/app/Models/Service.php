@@ -19,4 +19,5 @@ class Service extends Model
         return $this->belongsToMany(Order::class, 'order_service')
                     ->withPivot('id', 'quantity', 'price');
     }
+
 }

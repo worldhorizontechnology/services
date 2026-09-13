@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('campaigns', function (Blueprint $table) {
             $table->id();
+             $table->foreignId('channel_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->string('promo_code')->nullable();
+            $table->decimal('budget', 15, 2)->default(0.00);
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->timestamps();
         });
     }

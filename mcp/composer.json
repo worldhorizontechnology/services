@@ -8,6 +8,7 @@
     "require": {
         "php": ">=8.3",
         "ext-json": "*",
+        "doctrine/dbal": "^4.4",
         "google/apiclient": "^2.19",
         "mcp/sdk": "^0.1",
         "nyholm/psr7": "^1.8",

@@ -13,6 +13,18 @@ return new class extends Migration
     {
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
+             $table->string('first_name');
+            $table->string('last_name')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('email')->nullable();
+            $table->foreignId('channel_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('campaign_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('entry_point')->nullable();
+            $table->string('status')->nullable();
+            $table->string('telegram_id')->nullable();
+            $table->string('instagram_id')->nullable();
+            $table->string('whatsapp')->nullable();
+            $table->text('comment')->nullable();
             $table->timestamps();
         });
     }

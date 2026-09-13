@@ -10,6 +10,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Tools\CrmTools;
+use App\Tools\WorkspaceTools;
+use App\Tools\CalendarTools;
 
 class McpController extends AbstractController
 {
@@ -36,7 +39,7 @@ class McpController extends AbstractController
     ->addTool([$this->workspaceTools, 'searchWorkspaceInfo'], 'search_workspace_info')
     // Google Calendar tools
     ->addTool([$this->calendarTools, 'checkCalendarSlots'], 'check_calendar_slots')
-    ->addTool([$this->calendarTools, 'bookCalendarSlot'], 'book_calendar_slot')
+    ->addTool([$this->calendarTools, 'bookCalendarSlots'], 'book_calendar_slots')
     ->build();
 
         // 2. Convert Symfony Request to PSR-7 Request required by MCP SDK

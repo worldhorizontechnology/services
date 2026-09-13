@@ -13,10 +13,19 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('first_name');
+            $table->string('last_name')->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('role')->default('master');
+            $table->string('phone')->nullable();
+            $table->bigInteger('telegram_id')->nullable();
+            $table->string('telegram_username')->nullable();
+            $table->string('calendarId')->nullable(); // From your $fillable 'calendarId'
+            $table->string('instagram_id')->nullable();
+            $table->string('instagram_username')->nullable();
+            $table->boolean('is_active')->default(true); // Required by your Symfony MCP Query
             $table->rememberToken();
             $table->timestamps();
         });

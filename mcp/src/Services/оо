@@ -1,0 +1,646 @@
+
+curl -X POST http://localhost:8000/mcp \
+     -H "Content-Type: application/json" \
+     -d '{
+       "jsonrpc": "2.0",
+       "method": "tools/call",
+       "params": {
+         "name": "check_calendar_slots",
+         "arguments": {
+           "startDate": "2026-09-14",
+           "endDate": "2026-09-15",
+           "serviceId": 1
+         }
+       },
+       "id": 1
+     }'
+
+Откройте логи вашего Symfony-приложения (вкладку терминала, где запущен symfony server:start, либо файл var/log/dev.log).Найдите там сгенерированную длинную ссылку от Google, скопируйте её и откройте в браузере.Авторизуйтесь, разрешите доступ к Календарю.Скопируйте полученный код авторизации ?code=... из браузера.Вернитесь в терминал, где запущен сам сервер Symfony, вставьте этот код в поле ввода (которое активировал fgets(STDIN) в конструкторе сервиса) и нажмите Enter.Как только вы это сделаете, сервер создаст файл токена, curl мгновенно отвиснет и выведет вам в консоль JSON-массив со свободными слотами мастеров из базы данных crm/laravel. При всех последующих вызовах curl ответ будет прилетать моментально.
+
+
+
+
+
+<?php
+
+namespace App\Services;
+
+use Google\Client;
+use Google\Service\Calendar;
+use Google\Service\Calendar\FreeBusyRequest;
+use Google\Service\Calendar\FreeBusyRequestItem;
+use DateTimeImmutable;
+use DateTimeZone;
+
+class GoogleCalendarService
+{
+    private Calendar $calendar;
+
+    public function __construct()
+    {
+        $client = new Client();
+        $client->setAuthConfig($_ENV['GOOGLE_APPLICATION_CREDENTIALS']);
+        $client->addScope(Calendar::CALENDAR);
+
+        $this->calendar = new Calendar($client);
+    }
+
+    /**
+     * Executes ONE single Free/Busy query for all calendars and returns slots mapped to each calendar ID.
+     */
+    public function getAvailableSlots(
+        array $calendarIds, // Array of calendar IDs from SQLite
+        string $startDate,
+        string $endDate,
+        int $durationMinutes = 60,
+        string $workStart = '09:00',
+        string $workEnd = '18:00',
+        int $stepMinutes = 30
+    ): array {
+        $timezone = new DateTimeZone('Europe/Madrid');
+        $rangeStart = new DateTimeImmutable("$startDate $workStart", $timezone);
+        $rangeEnd = new DateTimeImmutable("$endDate $workEnd", $timezone);
+
+        // 1. Pack all IDs into a single Free/Busy request
+        $requestItems = [];
+        foreach ($calendarIds as $id) {
+            $item = new FreeBusyRequestItem();
+            $item->setId($id);
+            $requestItems[] = $item;
+        }
+
+        $fbRequest = new FreeBusyRequest();
+        $fbRequest->setTimeMin($rangeStart->format(DATE_RFC3339));
+        $fbRequest->setTimeMax($rangeEnd->format(DATE_RFC3339));
+        $fbRequest->setTimeZone('Europe/Madrid');
+        $fbRequest->setItems($requestItems);
+
+        // 2. Execute a SINGLE aggregated query to Google API
+        $fbResponse = $this->calendar->freebusy->query($fbRequest);
+        $calendarsData = $fbResponse->getCalendars();
+
+        $result = [];
+
+        // 3. Process the single response to map slots back to each specific master/calendar ID
+        foreach ($calendarIds as $calendarId) {
+            $data = $calendarsData->get($calendarId);
+            $busyIntervals = [];
+
+            if ($data) {
+                foreach ($data->getBusy() as $period) {
+                    $busyIntervals[] = [
+                        'start' => new DateTimeImmutable($period->getStart(), $timezone),
+                        'end' => new DateTimeImmutable($period->getEnd(), $timezone)
+                    ];
+                }
+            }
+
+            $masterSlots = [];
+            $currentDay = new DateTimeImmutable($startDate, $timezone);
+            $lastDay = new DateTimeImmutable($endDate, $timezone);
+
+            // Generate slots for this specific calendar ID using the fetched busy data
+            while ($currentDay <= $lastDay) {
+                $dayStr = $currentDay->format('Y-m-d');
+                $dayStart = new DateTimeImmutable("$dayStr $workStart", $timezone);
+                $dayEnd = new DateTimeImmutable("$dayStr $workEnd", $timezone);
+
+                for (
+                    $slotStart = $dayStart;
+                    $slotStart->modify("+{$durationMinutes} minutes") <= $dayEnd;
+                    $slotStart = $slotStart->modify("+{$stepMinutes} minutes")
+                ) {
+                    $slotEnd = $slotStart->modify("+{$durationMinutes} minutes");
+                    $free = true;
+
+                    foreach ($busyIntervals as $busy) {
+                        if ($slotStart < $busy['end'] && $slotEnd > $busy['start']) {
+                            $free = false;
+                            break;
+                        }
+                    }
+
+                    if ($free) {
+                        $masterSlots[] = [
+                            'start' => $slotStart->format(DATE_RFC3339),
+                            'end' => $slotEnd->format(DATE_RFC3339),
+                        ];
+                    }
+                }
+                $currentDay = $currentDay->modify('+1 day');
+            }
+
+            // Map the calendar ID directly to its free slots
+            if (!empty($masterSlots)) {
+                $result[] = [
+                    'calendar_id' => $calendarId,
+                    'available_slots' => $masterSlots
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    public function createEvent(
+        string $calendarId,
+        string $igsid,
+        string $client_name,
+        string $start,
+        string $end,
+        ?string $description = null
+    ): string {
+        $event = new Calendar\Event();
+        $event->setSummary($client_name);
+
+        if (!empty($igsid)) {
+            $instagramUrl = "Instagram: https://instagram.com" . ltrim($igsid, '@');
+            $description = $description ? "{$description}\n\n{$instagramUrl}" : $instagramUrl;
+        }
+
+        if ($description !== null) {
+            $event->setDescription($description);
+        }
+
+        $startTime = new Calendar\EventDateTime();
+        $startTime->setDateTime($start);
+        $startTime->setTimeZone('Europe/Madrid');
+
+        $endTime = new Calendar\EventDateTime();
+        $endTime->setDateTime($end);
+        $endTime->setTimeZone('Europe/Madrid');
+
+        $event->setStart($startTime);
+        $event->setEnd($endTime);
+
+        $created = $this->calendar->events->insert($calendarId, $event);
+
+        return $created->getId();
+    }
+}
+
+
+
+
+<?php
+
+namespace App\Tools;
+
+use App\Services\GoogleCalendarService;
+use Mcp\Capability\Attribute\McpTool;
+use Mcp\Capability\Attribute\Schema;
+use Doctrine\DBAL\Connection;
+use DateTimeImmutable;
+use DateTimeZone;
+
+class CalendarTools
+{
+    public function __construct(
+        private GoogleCalendarService $calendarService,
+        private Connection $connection
+    ) {}
+
+    /**
+     * Checks available slots across multiple master calendars filtered by serviceId OR masterId.
+     */
+    #[McpTool(name: 'check_calendar_slots')]
+    public function checkCalendarSlots(
+        #[Schema(pattern: '^\d{4}-\d{2}-\d{2}$', description: 'Start date of the range in YYYY-MM-DD format')]
+        string $startDate,
+
+        #[Schema(pattern: '^\d{4}-\d{2}-\d{2}$', description: 'End date of the range in YYYY-MM-DD format')]
+        string $endDate,
+
+        #[Schema(description: 'Optional database ID of the requested service')]
+        ?int $serviceId = null,
+
+        #[Schema(description: 'Optional database ID of a specific master/user')]
+        ?int $masterId = null
+    ): string {
+        $query = 'SELECT DISTINCT u.google_calendar_id FROM users u';
+        $params = [];
+
+        if ($serviceId !== null) {
+            $query .= ' JOIN assignments a ON u.id = a.executor_id
+                        JOIN order_service os ON a.order_id = os.order_id
+                        WHERE os.service_id = :serviceId AND u.google_calendar_id IS NOT NULL AND u.is_active = 1';
+            $params['serviceId'] = $serviceId;
+        } elseif ($masterId !== null) {
+            $query .= ' WHERE u.id = :masterId AND u.google_calendar_id IS NOT NULL AND u.is_active = 1';
+            $params['masterId'] = $masterId;
+        } else {
+            $query .= ' WHERE u.google_calendar_id IS NOT NULL AND u.is_active = 1';
+        }
+
+        // Fetch flat array of calendar IDs from SQLite
+        $calendarIds = $this->connection->fetchFirstColumn($query, $params);
+
+        if (empty($calendarIds)) {
+            return json_encode(['error' => 'No active master calendars found'], JSON_THROW_ON_ERROR);
+        }
+
+        // Pass the entire array of IDs into the service for a SINGLE Free/Busy request
+        $availableSlotsGrouped = $this->calendarService->getAvailableSlots($calendarIds, $startDate, $endDate, 60);
+
+        return json_encode($availableSlotsGrouped, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Books a slot in Google Calendar for an Instagram client.
+     */
+    #[McpTool(name: 'book_calendar_slot')]
+    public function bookCalendarSlot(
+        #[Schema(description: 'ID of the calendar')]
+        string $calendarId,
+
+        #[Schema(description: 'Start datetime in YYYY-MM-DD HH:MM format')]
+        string $datetime_start,
+
+        #[Schema(description: 'Client name')]
+        string $client_name,
+
+        #[Schema(description: 'Instagram Scoped User ID')]
+        string $igsid
+    ): string {
+        $timezone = new DateTimeZone('Europe/Madrid');
+        $startDt = new DateTimeImmutable($datetime_start, $timezone);
+        $endDt = $startDt->modify('+60 minutes');
+
+        return $this->calendarService->createEvent(
+            $calendarId, 
+            $igsid, 
+            $client_name, 
+            $startDt->format(DATE_RFC3339), 
+            $endDt->format(DATE_RFC3339)
+        );
+    }
+}
+
+
+<?php
+
+namespace App\Services;
+
+use Google\Client;
+use Google\Service\Calendar;
+use Google\Service\Calendar\FreeBusyRequest;
+use Google\Service\Calendar\FreeBusyRequestItem;
+use DateTimeImmutable;
+use DateTimeZone;
+
+class GoogleCalendarService
+{
+    private Calendar $calendar;
+
+    public function __construct()
+    {
+        $client = new Client();
+        $client->setAuthConfig($_ENV['GOOGLE_APPLICATION_CREDENTIALS']);
+        $client->addScope(Calendar::CALENDAR);
+
+        $this->calendar = new Calendar($client);
+    }
+
+    /**
+     * Executes ONE single Free/Busy query for all calendars and returns slots mapped to each calendar ID.
+     */
+    public function getAvailableSlots(
+        array $calendarIds, // Array of calendar IDs from SQLite
+        string $startDate,
+        string $endDate,
+        int $durationMinutes = 60,
+        string $workStart = '09:00',
+        string $workEnd = '18:00',
+        int $stepMinutes = 30
+    ): array {
+        $timezone = new DateTimeZone('Europe/Madrid');
+        $rangeStart = new DateTimeImmutable("$startDate $workStart", $timezone);
+        $rangeEnd = new DateTimeImmutable("$endDate $workEnd", $timezone);
+
+        // 1. Pack all IDs into a single Free/Busy request
+        $requestItems = [];
+        foreach ($calendarIds as $id) {
+            $item = new FreeBusyRequestItem();
+            $item->setId($id);
+            $requestItems[] = $item;
+        }
+
+        $fbRequest = new FreeBusyRequest();
+        $fbRequest->setTimeMin($rangeStart->format(DATE_RFC3339));
+        $fbRequest->setTimeMax($rangeEnd->format(DATE_RFC3339));
+        $fbRequest->setTimeZone('Europe/Madrid');
+        $fbRequest->setItems($requestItems);
+
+        // 2. Execute a SINGLE aggregated query to Google API
+        $fbResponse = $this->calendar->freebusy->query($fbRequest);
+        $calendarsData = $fbResponse->getCalendars();
+
+        $result = [];
+
+        // 3. Process the single response to map slots back to each specific master/calendar ID
+        foreach ($calendarIds as $calendarId) {
+            $data = $calendarsData->get($calendarId);
+            $busyIntervals = [];
+
+            if ($data) {
+                foreach ($data->getBusy() as $period) {
+                    $busyIntervals[] = [
+                        'start' => new DateTimeImmutable($period->getStart(), $timezone),
+                        'end' => new DateTimeImmutable($period->getEnd(), $timezone)
+                    ];
+                }
+            }
+
+            $masterSlots = [];
+            $currentDay = new DateTimeImmutable($startDate, $timezone);
+            $lastDay = new DateTimeImmutable($endDate, $timezone);
+
+            // Generate slots for this specific calendar ID using the fetched busy data
+            while ($currentDay <= $lastDay) {
+                $dayStr = $currentDay->format('Y-m-d');
+                $slotStart = new DateTimeImmutable("$dayStr $workStart", $timezone);
+                $dayEnd = new DateTimeImmutable("$dayStr $workEnd", $timezone);
+
+                // Безопасный цикл без риска уйти в бесконечное выполнение
+                while (true) {
+                    $slotEnd = $slotStart->modify("+{$durationMinutes} minutes");
+
+                    // Если слот выходит за рамки рабочего дня — прекращаем генерацию для этого дня
+                    if ($slotEnd > $dayEnd) {
+                        break;
+                    }
+
+                    $free = true;
+                    foreach ($busyIntervals as $busy) {
+                        if ($slotStart < $busy['end'] && $slotEnd > $busy['start']) {
+                            $free = false;
+                            break;
+                        }
+                    }
+
+                    if ($free) {
+                        $masterSlots[] = [
+                            'start' => $slotStart->format(DATE_RFC3339),
+                            'end' => $slotEnd->format(DATE_RFC3339),
+                        ];
+                    }
+
+                    // Переходим строго на следующий шаг
+                    $slotStart = $slotStart->modify("+{$stepMinutes} minutes");
+                }
+
+                $currentDay = $currentDay->modify('+1 day');
+            }
+
+            // Map the calendar ID directly to its free slots
+            if (!empty($masterSlots)) {
+                $result[] = [
+                    'calendar_id' => $calendarId,
+                    'available_slots' => $masterSlots
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    public function createEvent(
+        string $calendarId,
+        string $igsid,
+        string $client_name,
+        string $start,
+        string $end,
+        ?string $description = null
+    ): string {
+        $event = new Calendar\Event();
+        $event->setSummary($client_name);
+
+        if (!empty($igsid)) {
+            // Исправлено: добавлен пропущенный слэш "/" после instagram.com
+            $cleanIgsid = ltrim($igsid, '@');
+            $instagramUrl = "Instagram: https://instagram.com" . $cleanIgsid;
+            $description = $description ? "{$description}\n\n{$instagramUrl}" : $instagramUrl;
+        }
+
+        if ($description !== null) {
+            $event->setDescription($description);
+        }
+
+        $startTime = new Calendar\EventDateTime();
+        $startTime->setDateTime($start);
+        $startTime->setTimeZone('Europe/Madrid');
+
+        $endTime = new Calendar\EventDateTime();
+        $endTime->setDateTime($end);
+        $endTime->setTimeZone('Europe/Madrid');
+
+        $event->setStart($startTime);
+        $event->setEnd($endTime);
+
+        $created = $this->calendar->events->insert($calendarId, $event);
+
+        return $created->getId();
+    }
+}
+
+<?php
+
+namespace App\Services;
+
+use Google\Client;
+use Google\Service\Calendar;
+use DateTimeImmutable;
+use DateTimeZone;
+
+class GoogleCalendarService
+{
+    private Calendar $calendar;
+
+    public function __construct()
+    {
+        $client = new Client();
+
+        $client->setAuthConfig(
+            $_ENV['GOOGLE_APPLICATION_CREDENTIALS']
+        );
+
+        $client->addScope(Calendar::CALENDAR);
+
+        $this->calendar = new Calendar($client);
+    }
+
+    public function getAvailableSlots(
+        string $calendarId,
+        string $date,
+        int $durationMinutes,
+        string $workStart = '09:00',
+        string $workEnd = '18:00',
+        int $stepMinutes = 30
+    ): array {
+        $timezone = new DateTimeZone('Europe/Madrid');
+
+        $dayStart = new DateTimeImmutable(
+            "$date $workStart",
+            $timezone
+        );
+
+        $dayEnd = new DateTimeImmutable(
+            "$date $workEnd",
+            $timezone
+        );
+
+        // Google Calendar сам отдаёт занятые события
+        $events = $this->calendar->events->listEvents(
+            $calendarId,
+            [
+                'timeMin' => $dayStart->format(DATE_RFC3339),
+                'timeMax' => $dayEnd->format(DATE_RFC3339),
+                'singleEvents' => true,
+                'orderBy' => 'startTime',
+            ]
+        );
+
+        $busy = [];
+
+        foreach ($events->getItems() as $event) {
+            $start = $event->getStart()->getDateTime();
+            $end = $event->getEnd()->getDateTime();
+
+            // Пропускаем события без конкретного времени
+            if (!$start || !$end) {
+                continue;
+            }
+
+            $busy[] = [
+                'start' => new DateTimeImmutable($start),
+                'end' => new DateTimeImmutable($end),
+            ];
+        }
+
+        $slots = [];
+
+        // Перебираем возможные начала записи
+        for (
+            $slotStart = $dayStart;
+            $slotStart->modify("+{$durationMinutes} minutes") <= $dayEnd;
+            $slotStart = $slotStart->modify("+{$stepMinutes} minutes")
+        ) {
+            $slotEnd = $slotStart->modify(
+                "+{$durationMinutes} minutes"
+            );
+
+            $free = true;
+
+            // Проверяем пересечение с каждым событием Google Calendar
+            foreach ($busy as $event) {
+                if (
+                    $slotStart < $event['end'] &&
+                    $slotEnd > $event['start']
+                ) {
+                    $free = false;
+                    break;
+                }
+            }
+
+            if ($free) {
+                $slots[] = [
+                    'start' => $slotStart->format(DATE_RFC3339),
+                    'end' => $slotEnd->format(DATE_RFC3339),
+                ];
+            }
+        }
+
+        return $slots;
+    }
+
+    public function createEvent(
+        string $calendarId,
+        string $igsid,
+        string $client_name,
+        string $start,
+        string $end,
+        ?string $description = null
+    ): string {
+        $event = new Calendar\Event();
+
+        
+        $event->setSummary($client_name);
+
+        
+        if (!empty($igsid)) {
+            $instagramUrl = "Instagram: https://instagram.com" . ltrim($igsid, '@');
+            $description = $description ? "{$description} \n\n {$instagramUrl}": $instagramUrl;
+        }
+
+        $startTime = new Calendar\EventDateTime();
+        $startTime->setDateTime($start);
+        $startTime->setTimeZone('Europe/Madrid');
+
+        $endTime = new Calendar\EventDateTime();
+        $endTime->setDateTime($end);
+        $endTime->setTimeZone('Europe/Madrid');
+
+        $event->setStart($startTime);
+        $event->setEnd($endTime);
+
+        $created = $this->calendar->events->insert(
+            $calendarId,
+            $event
+        );
+
+        return $created->getId();
+    }
+}
+
+
+<?php
+
+namespace App\Tools;
+
+use App\Services\GoogleCalendarService;
+use Mcp\Capability\Attribute\McpTool;
+use Mcp\Capability\Attribute\Schema;
+
+class CalendarTools
+{
+    public function __construct(
+        private GoogleCalendarService $calendarService
+    ) {}
+
+    /**
+     * Checks available booking slots in Google Calendar for a specialist on a date.
+     */
+    #[McpTool(name: 'check_calendar_slots')]
+    public function checkCalendarSlots(
+        #[Schema(description: 'Name or identifier of the specialist')]
+        string $calendarId,
+
+        #[Schema(pattern: '^\d{4}-\d{2}-\d{2}$', description: 'Date in YYYY-MM-DD format')]
+        string $date
+    ): string {
+        return json_encode(
+            $this->calendarService->getAvailableSlots($calendarId, $date, 60),
+            JSON_THROW_ON_ERROR
+        );
+    }
+
+    /**
+     * Books a slot in Google Calendar for an Instagram client.
+     */
+    #[McpTool(name: 'book_calendar_slot')]
+    public function bookCalendarSlot(
+        #[Schema(description: 'ID of the calendar')]
+        string $calendarId,
+
+        #[Schema(description: 'Start datetime in YYYY-MM-DD HH:MM format')]
+        string $datetime_start,
+
+        #[Schema(description: 'Client name')]
+        string $client_name,
+
+        #[Schema(description: 'Instagram Scoped User ID')]
+        string $igsid
+    ): string {
+        return $this->calendarService->createEvent($calendarId, $igsid,$client_name, $datetime_start, $datetime_start);
+    }
+}

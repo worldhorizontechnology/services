@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('assignments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('order_id')->constrained()->onDelete('cascade');
+            $table->foreignId('executor_id')->constrained('users')->onDelete('cascade'); // Points to users table
+            $table->string('status')->default('assigned');
+            $table->datetime('start_date')->nullable();
+            $table->datetime('due_date')->nullable();
             $table->timestamps();
         });
     }
