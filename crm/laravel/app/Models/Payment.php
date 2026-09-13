@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Notifications\TelegramNotification;
+use Illuminate\Notifications\Notifiable;
 
 class Payment extends Model
 {
+    use Notifiable;
     protected $fillable = ['order_id', 'amount', 'method', 'paid_at'];
 
     protected $casts = [
@@ -17,5 +20,18 @@ class Payment extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+     protected static function booted(): void
+    {
+        static::created(function (Payment $payment) {
+            $payment->load([
+                'order.assignments.executor',
+            ]);
+
+            $payment->notify(
+                new TelegramNotification($payment)
+            );
+        });
     }
 }

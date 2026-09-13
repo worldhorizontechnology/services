@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\Notifiable;
+use App\Notifications\TelegramNotification;
 
 class Customer extends Model
 {
+     use Notifiable;
     protected $fillable = ['first_name', 'last_name', 'phone', 'email', 'channel_id', 'campaign_id', 'entry_point', 'status', 'telegram_id', 'instagram_id', 'whatsapp', 'comment'];
 
     public function channel(): BelongsTo
@@ -23,5 +26,12 @@ class Customer extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    protected static function booted() 
+    {
+        static::created(function (Customer $customer) {
+            $customer->notify(new TelegramNotification($customer));
+        });
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Tools;
 
-use App\Service\GoogleCalendarService;
+use App\Services\GoogleCalendarService;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
 

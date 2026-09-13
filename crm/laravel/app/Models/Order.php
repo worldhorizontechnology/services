@@ -6,9 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Notifications\TelegramNotification;
+use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property int $id
+ * @property int $customer_id
+ * @property string $status
+ * @property float $total_amount
+ * @property-read \App\Models\Customer|null $customer
+ */
 class Order extends Model
 {
+    use Notifiable;
     protected $fillable = ['customer_id', 'campaign_id', 'status', 'payment_status', 'discount_amount', 'total_amount'];
 
     protected $casts = [
@@ -41,4 +51,20 @@ class Order extends Model
     {
         return $this->hasMany(Assignment::class);
     }
+
+     protected static function booted(): void
+    {
+        static::created(function (Order $order) {
+            $order->load([
+                'customer',
+                'assignments.executor',
+            ]);
+
+            $order->notify(
+                new TelegramNotification($order)
+            );
+        });
+    }
+
+    
 }

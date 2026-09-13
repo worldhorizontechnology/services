@@ -13,14 +13,19 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+     'telegram' => [
 
-    'telegram-bot-api' => [
     'token' => env('TELEGRAM_BOT_TOKEN'),
-],
-    'telegram' => [
-    'group_id' => env('TELEGRAM_GROUP_ID'),
-],
 
+    'chat_id' => env('TELEGRAM_CHAT_ID'),
+
+    'topics' => [
+        'customer' => env('TELEGRAM_CUSTOMER_TOPIC_ID'),
+        'order' => env('TELEGRAM_ORDER_TOPIC_ID'),
+        'payment' => env('TELEGRAM_PAYMENT_TOPIC_ID'),
+    ],
+
+],
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
