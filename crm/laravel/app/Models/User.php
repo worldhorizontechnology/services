@@ -41,4 +41,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Assignment::class, 'executor_id');
     }
+
+    public function services()
+    {
+        return $this->belongsToMany(Service::class, 'service_user');
+    }
 }

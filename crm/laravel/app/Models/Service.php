@@ -20,4 +20,10 @@ class Service extends Model
                     ->withPivot('id', 'quantity', 'price');
     }
 
+    public function executors()
+    {
+         return $this->belongsToMany(User::class, 'service_user')
+                    ->withPivot('id', 'price', 'is_active');
+    }
+
 }

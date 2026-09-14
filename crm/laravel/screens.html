@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApexCRM — Enterprise CRM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="h-full font-sans antialiased bg-slate-950 text-slate-100 flex overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between z-20 shrink-0 select-none">
+        <div>
+            <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-800">
+                <div class="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-600/30">
+                    <i data-lucide="activity" class="w-5 h-5"></i>
+                </div>
+                <span class="font-bold text-lg tracking-wide text-white">ApexCRM</span>
+            </div>
+
+            <nav class="p-4 space-y-1">
+                <button type="button" onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 bg-blue-600 text-white">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    Маркетинг & Аналитика
+                </button>
+                <button type="button" onclick="switchTab('orders')" id="nav-orders" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-xl transition-all duration-200">
+                    <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                    Заказы & Исполнители
+                </button>
+                <button type="button" onclick="switchTab('services')" id="nav-services" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-xl transition-all duration-200">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                    Услуги (`services`)
+                </button>
+                <button type="button" onclick="switchTab('customers')" id="nav-customers" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-xl transition-all duration-200">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    Клиенты (`customers`)
+                </button>
+                <button type="button" onclick="switchTab('users')" id="nav-users" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-xl transition-all duration-200">
+                    <i data-lucide="user-check" class="w-5 h-5"></i>
+                    Команда (`users`)
+                </button>
+                <button type="button" onclick="switchTab('campaigns')" id="nav-campaigns" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-xl transition-all duration-200">
+                    <i data-lucide="megaphone" class="w-5 h-5"></i>
+                    Кампании & Каналы
+                </button>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center font-semibold text-sm text-blue-400 border border-slate-700">
+                    AD
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-white">Admin User</p>
+                    <p class="text-xs text-slate-400">Role: ADMIN</p>
+                </div>
+            </div>
+            <button class="text-slate-400 hover:text-rose-400 p-2 rounded-lg transition-colors">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto bg-slate-950">
+        
+        <!-- HEADER -->
+        <header class="h-16 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md px-8 flex items-center justify-between sticky top-0 z-10 shrink-0">
+            <h1 id="page-title" class="text-xl font-bold text-white tracking-tight">Маркетинг и Аналитика</h1>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg p-1 text-xs">
+                    <button class="px-3 py-1.5 rounded-md bg-slate-700 text-white font-medium shadow-sm">Сегодня</button>
+                    <button class="px-3 py-1.5 rounded-md text-slate-400 hover:text-slate-200">7 Дней</button>
+                    <button class="px-3 py-1.5 rounded-md text-slate-400 hover:text-slate-200">30 Дней</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 space-y-8">
+
+            <!-- TAB 1: ANALYTICS -->
+            <div id="tab-analytics" class="tab-content space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-xl flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-slate-400 mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider">Выручка (Total)</span>
+                            <i data-lucide="dollar-sign" class="w-4 h-4 text-emerald-400"></i>
+                        </div>
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-2xl font-black text-white">$124,500.00</span>
+                            <span class="text-xs font-semibold text-emerald-400 flex items-center gap-0.5"><i data-lucide="trending-up" class="w-3 h-3"></i> +14.2%</span>
+                        </div>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-xl flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-slate-400 mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider">Затраты на рекламу</span>
+                            <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+                        </div>
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-2xl font-black text-white">$18,320.00</span>
+                            <span class="text-xs font-semibold text-rose-400 flex items-center gap-0.5"><i data-lucide="trending-up" class="w-3 h-3"></i> +5.1%</span>
+                        </div>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-xl flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-slate-400 mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider">Средний ROAS</span>
+                            <i data-lucide="pie-chart" class="w-4 h-4 text-blue-400"></i>
+                        </div>
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-2xl font-black text-white">6.79x</span>
+                            <span class="text-xs font-semibold text-emerald-400 flex items-center gap-0.5"><i data-lucide="trending-up" class="w-3 h-3"></i> +0.8x</span>
+                        </div>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-xl flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-slate-400 mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider">Стоимость лида (CAC)</span>
+                            <i data-lucide="user-plus" class="w-4 h-4 text-purple-400"></i>
+                        </div>
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-2xl font-black text-white">$42.10</span>
+                            <span class="text-xs font-semibold text-emerald-400 flex items-center gap-0.5"><i data-lucide="trending-down" class="w-3 h-3"></i> -2.4%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+                        <h3 class="font-bold text-white text-base mb-1">Выручка vs Расходы на Рекламу</h3>
+                        <p class="text-xs text-slate-400 mb-6">Сравнительный анализ затрат и дохода</p>
+                        <div class="h-72 w-full"><canvas id="revenueChart"></canvas></div>
+                    </div>
+                    <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl flex flex-col">
+                        <h3 class="font-bold text-white text-base mb-1">Конверсия по Каналам</h3>
+                        <p class="text-xs text-slate-400 mb-6">Доля первичных лидов</p>
+                        <div class="h-60 w-full flex items-center justify-center"><canvas id="channelChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: ORDERS (с Исполнителями) -->
+            <div id="tab-orders" class="tab-content hidden space-y-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <input type="text" placeholder="Поиск по заказам..." class="bg-slate-900 border border-slate-800 text-sm px-4 py-2.5 rounded-xl text-white focus:outline-none focus:border-blue-500 w-80">
+                        <select class="bg-slate-900 border border-slate-800 text-sm px-4 py-2.5 rounded-xl text-slate-300 focus:outline-none">
+                            <option value="">Все статусы</option>
+                            <option value="new">Новые (new)</option>
+                            <option value="in_progress">В работе (in_progress)</option>
+                            <option value="completed">Завершенные (completed)</option>
+                        </select>
+                    </div>
+                    <button onclick="toggleModal('order-modal', true)" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-2 shadow-lg shadow-blue-600/20">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Создать Заказ
+                    </button>
+                </div>
+
+                <div class="rounded-2xl bg-slate-900 border border-slate-800 shadow-xl overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-950/50 text-slate-400 uppercase text-[11px] font-semibold tracking-wider border-b border-slate-800">
+                            <tr>
+                                <th class="py-4 px-6">ID Заказа</th>
+                                <th class="py-4 px-6">Клиент (`customer_id`)</th>
+                                <th class="py-4 px-6">Состав / Услуги (`order_service`)</th>
+                                <th class="py-4 px-6">Назначенный Исполнитель</th>
+                                <th class="py-4 px-6">Статус / Оплата</th>
+                                <th class="py-4 px-6 text-right">Итого</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-4 px-6 font-mono text-blue-400 font-bold">#ORD-1092</td>
+                                <td class="py-4 px-6">
+                                    <div class="font-medium text-white">Александр Иванов</div>
+                                    <div class="text-xs text-slate-500">+7 (999) 000-11-22</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-xs text-slate-200 font-medium">• Настройка таргета</div>
+                                    <div class="text-xs text-slate-200 font-medium">• Ведение соцсетей</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-500/30">
+                                            ЕК
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-medium text-white">Елена Ковалева</div>
+                                            <div class="text-[10px] text-slate-400">Исполнитель (`users`)</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 space-y-1">
+                                    <span class="inline-block px-2 py-0.5 bg-amber-500/10 text-amber-400 text-[11px] rounded border border-amber-500/20 font-medium">in_progress</span>
+                                    <span class="inline-block px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[11px] rounded border border-emerald-500/20 font-medium">paid</span>
+                                </td>
+                                <td class="py-4 px-6 text-right font-bold text-white">$240.00</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-4 px-6 font-mono text-blue-400 font-bold">#ORD-1091</td>
+                                <td class="py-4 px-6">
+                                    <div class="font-medium text-white">Мария Петрова</div>
+                                    <div class="text-xs text-slate-500">+7 (999) 111-22-33</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-xs text-slate-200 font-medium">• Комплексный аудит</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs border border-blue-500/30">
+                                            ОС
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-medium text-white">Олег Сидоров</div>
+                                            <div class="text-[10px] text-slate-400">Исполнитель (`users`)</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 space-y-1">
+                                    <span class="inline-block px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[11px] rounded border border-emerald-500/20 font-medium">completed</span>
+                                    <span class="inline-block px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[11px] rounded border border-emerald-500/20 font-medium">paid</span>
+                                </td>
+                                <td class="py-4 px-6 text-right font-bold text-white">$550.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: SERVICES (`services`) -->
+            <div id="tab-services" class="tab-content hidden space-y-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-white text-lg">Каталог Услуг (`services`)</h3>
+                    <button class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Добавить Услугу
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="px-2 py-1 bg-blue-500/10 text-blue-400 text-xs font-mono rounded">ID: 1</span>
+                                <span class="text-lg font-black text-emerald-400">$150.00</span>
+                            </div>
+                            <h4 class="font-bold text-white text-base">Консультация по Маркетингу</h4>
+                            <p class="text-xs text-slate-400 mt-2">Разбор воронки продаж, анализ текущих рекламных каналов и рекомендация бюджета.</p>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                            <span>Длительность: 1 час</span>
+                            <span class="text-blue-400 hover:underline cursor-pointer">Редактировать</span>
+                        </div>
+                    </div>
+
+                    <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="px-2 py-1 bg-blue-500/10 text-blue-400 text-xs font-mono rounded">ID: 2</span>
+                                <span class="text-lg font-black text-emerald-400">$350.00</span>
+                            </div>
+                            <h4 class="font-bold text-white text-base">Настройка рекламной кампании</h4>
+                            <p class="text-xs text-slate-400 mt-2">Полная настройка Google Ads или Yandex Direct под ключ с гарантией лидов.</p>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                            <span>Длительность: 3 дня</span>
+                            <span class="text-blue-400 hover:underline cursor-pointer">Редактировать</span>
+                        </div>
+                    </div>
+
+                    <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="px-2 py-1 bg-blue-500/10 text-blue-400 text-xs font-mono rounded">ID: 3</span>
+                                <span class="text-lg font-black text-emerald-400">$500.00</span>
+                            </div>
+                            <h4 class="font-bold text-white text-base">SEO-оптимизация сайта</h4>
+                            <p class="text-xs text-slate-400 mt-2">Аудит, сбор семантики, технические правки и оптимизация посадочных страниц.</p>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                            <span>Длительность: 14 дней</span>
+                            <span class="text-blue-400 hover:underline cursor-pointer">Редактировать</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: USERS (Сотрудники / Исполнители) -->
+            <div id="tab-users" class="tab-content hidden space-y-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-white text-lg">Пользователи системы (`users`)</h3>
+                        <p class="text-xs text-slate-400">Менеджеры, Администраторы и Исполнители</p>
+                    </div>
+                    <button class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i> Добавить Сотрудника
+                    </button>
+                </div>
+
+                <div class="rounded-2xl bg-slate-900 border border-slate-800 shadow-xl overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-950/50 text-slate-400 uppercase text-[11px] font-semibold tracking-wider border-b border-slate-800">
+                            <tr>
+                                <th class="py-4 px-6">ID / Имя</th>
+                                <th class="py-4 px-6">Email</th>
+                                <th class="py-4 px-6">Роль в системе</th>
+                                <th class="py-4 px-6">Активные Заказы</th>
+                                <th class="py-4 px-6 text-right">Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-4 px-6 font-medium text-white flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs">
+                                        AD
+                                    </div>
+                                    <span>Admin User</span>
+                                </td>
+                                <td class="py-4 px-6 text-slate-400">admin@crm.dev</td>
+                                <td class="py-4 px-6"><span class="px-2.5 py-1 bg-purple-500/10 text-purple-400 text-xs rounded-full border border-purple-500/20 font-semibold">ADMIN</span></td>
+                                <td class="py-4 px-6 text-slate-400">—</td>
+                                <td class="py-4 px-6 text-right text-blue-400 hover:underline cursor-pointer">Изменить</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-4 px-6 font-medium text-white flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                                        ЕК
+                                    </div>
+                                    <span>Елена Ковалева</span>
+                                </td>
+                                <td class="py-4 px-6 text-slate-400">elena@crm.dev</td>
+                                <td class="py-4 px-6"><span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-full border border-emerald-500/20 font-semibold">EXECUTOR</span></td>
+                                <td class="py-4 px-6 font-semibold text-white">4 заказа</td>
+                                <td class="py-4 px-6 text-right text-blue-400 hover:underline cursor-pointer">Изменить</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-4 px-6 font-medium text-white flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">
+                                        ОС
+                                    </div>
+                                    <span>Олег Сидоров</span>
+                                </td>
+                                <td class="py-4 px-6 text-slate-400">oleg@crm.dev</td>
+                                <td class="py-4 px-6"><span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-full border border-emerald-500/20 font-semibold">EXECUTOR</span></td>
+                                <td class="py-4 px-6 font-semibold text-white">2 заказа</td>
+                                <td class="py-4 px-6 text-right text-blue-400 hover:underline cursor-pointer">Изменить</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 5: CUSTOMERS -->
+            <div id="tab-customers" class="tab-content hidden space-y-6">
+                <div class="flex items-center justify-between">
+                    <input type="text" placeholder="Поиск клиентов..." class="bg-slate-900 border border-slate-800 text-sm px-4 py-2.5 rounded-xl text-white focus:outline-none focus:border-blue-500 w-96">
+                </div>
+                <div class="rounded-2xl bg-slate-900 border border-slate-800 shadow-xl overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-950/50 text-slate-400 uppercase text-[11px] font-semibold tracking-wider border-b border-slate-800">
+                            <tr>
+                                <th class="py-4 px-6">Клиент</th>
+                                <th class="py-4 px-6">Контакты</th>
+                                <th class="py-4 px-6">Первичный Канал</th>
+                                <th class="py-4 px-6">Точка входа</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-4 px-6 font-medium text-white">Александр Иванов</td>
+                                <td class="py-4 px-6"><span class="text-xs font-mono text-slate-300">+7 (999) 000-11-22</span></td>
+                                <td class="py-4 px-6"><span class="px-2.5 py-1 bg-blue-500/10 text-blue-400 text-xs rounded border border-blue-500/20">Google Ads</span></td>
+                                <td class="py-4 px-6 text-slate-400">промокод (SUMMER26)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 6: CAMPAIGNS & CHANNELS -->
+            <div id="tab-campaigns" class="tab-content hidden space-y-6">
+                <div class="rounded-2xl bg-slate-900 border border-slate-800 shadow-xl p-6">
+                    <h3 class="font-bold text-white text-base mb-4">Маркетинговые Кампании (`campaigns`)</h3>
+                    <p class="text-xs text-slate-400">Здесь вы управляете бюджетами и связываете каналы с промокодами.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL WINDOW FOR CREATING ORDER -->
+    <div id="order-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl p-6 space-y-5 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <h3 class="text-lg font-bold text-white">Создать Новое Назначение / Заказ</h3>
+                <button onclick="toggleModal('order-modal', false)" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form class="space-y-4" onsubmit="event.preventDefault(); toggleModal('order-modal', false);">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Клиент (`customers`)</label>
+                        <select class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                            <option>Александр Иванов (+7 999 000-11-22)</option>
+                            <option>Мария Петрова (+7 999 111-22-33)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Назначить Исполнителя (`users`)</label>
+                        <select class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                            <option>Елена Ковалева (EXECUTOR)</option>
+                            <option>Олег Сидоров (EXECUTOR)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Услуги (`services` & `order_service`)</label>
+                    <select multiple class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 h-24">
+                        <option selected>Консультация по Маркетингу — $150.00</option>
+                        <option>Настройка рекламной кампании — $350.00</option>
+                        <option>SEO-оптимизация сайта — $500.00</option>
+                    </select>
+                    <p class="text-[10px] text-slate-500 mt-1">Зажмите Ctrl / Cmd для выбора нескольких услуг</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Скидка ($)</label>
+                        <input type="number" value="0.00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Маркетинговая Кампания</label>
+                        <select class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                            <option>Без кампании (Прямой визит)</option>
+                            <option>Summer Offer 2026</option>
+                            <option>Flyer Discount</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3 border-t border-slate-800">
+                    <button type="button" onclick="toggleModal('order-modal', false)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium">Отмена</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium">Сохранить Заказ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JS SCRIPT -->
+    <script>
+        lucide.createIcons();
+
+        function switchTab(targetTab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('text-slate-400', 'hover:bg-slate-800');
+            });
+
+            const activeContent = document.getElementById(`tab-${targetTab}`);
+            if (activeContent) activeContent.classList.remove('hidden');
+
+            const activeBtn = document.getElementById(`nav-${targetTab}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-blue-600', 'text-white');
+                activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800');
+            }
+
+            const titles = {
+                'analytics': 'Маркетинг и Аналитика',
+                'orders': 'Управление Заказами и Исполнители',
+                'services': 'Каталог Услуг (`services`)',
+                'customers': 'База Клиентов (`customers`)',
+                'users': 'Управление Командой (`users`)',
+                'campaigns': 'Каналы Привлечения & Реклама'
+            };
+            document.getElementById('page-title').innerText = titles[targetTab] || 'ApexCRM';
+        }
+
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const ctxRev = document.getElementById('revenueChart');
+            if (ctxRev) {
+                new Chart(ctxRev.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: ['07 Сен', '08 Сен', '09 Сен', '10 Сен', '11 Сен', '12 Сен', '13 Сен'],
+                        datasets: [
+                            {
+                                label: 'Выручка ($)',
+                                data: [1200, 1900, 3000, 2500, 2200, 3100, 3450],
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                fill: true,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Расходы ($)',
+                                data: [300, 400, 500, 450, 300, 400, 450],
+                                borderColor: '#f59e0b',
+                                borderDash: [4, 4],
+                                fill: false,
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: '#94a3b8' } } },
+                        scales: {
+                            x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+                            y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
+                        }
+                    }
+                });
+            }
+
+            const ctxChan = document.getElementById('channelChart');
+            if (ctxChan) {
+                new Chart(ctxChan.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Google Ads', 'Telegram Bot', 'Direct Visit', 'Flyer Discount'],
+                        datasets: [{
+                            data: [45, 30, 15, 10],
+                            backgroundColor: ['#3b82f6', '#06b6d4', '#a855f7', '#f59e0b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10 } } }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
