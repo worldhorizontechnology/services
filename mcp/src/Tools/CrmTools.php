@@ -2,14 +2,14 @@
 
 namespace App\Tools;
 
-use App\Service\CrmIntegrationService;
+use App\Resources\CrmIntegrationResource;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
 
 class CrmTools
 {
     public function __construct(
-        private CrmIntegrationService $crmService
+        private CrmIntegrationResource $crmService
     ) {}
 
     /**
@@ -86,6 +86,43 @@ class CrmTools
             'name' => $name,
             'promo_code' => $promoCode,
             'budget' => $budget,
+        ]);
+    }
+
+    /**
+     * Creates a CRM order for an existing customer and service.
+     */
+    #[McpTool(name: 'create_order')]
+    public function createOrder(
+        #[Schema(description: 'FK -> customers.id')]
+        int $customerId,
+
+        #[Schema(description: 'FK -> services.id')]
+        int $serviceId,
+
+        #[Schema(description: 'Number of service units')]
+        int $quantity = 1,
+
+        #[Schema(description: 'Optional FK -> campaigns.id')]
+        ?int $campaignId = null,
+
+        #[Schema(description: 'Discount amount in currency unit')]
+        float $discountAmount = 0.00,
+
+        #[Schema(description: 'Order status')]
+        string $status = 'new',
+
+        #[Schema(description: 'Payment status')]
+        string $paymentStatus = 'unpaid'
+    ): string {
+        return $this->crmService->createOrder([
+            'customer_id' => $customerId,
+            'service_id' => $serviceId,
+            'quantity' => $quantity,
+            'campaign_id' => $campaignId,
+            'discount_amount' => $discountAmount,
+            'status' => $status,
+            'payment_status' => $paymentStatus,
         ]);
     }
 

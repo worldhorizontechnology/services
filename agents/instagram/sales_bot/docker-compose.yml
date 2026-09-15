@@ -9,6 +9,6 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - META_VERIFY_TOKEN=${META_VERIFY_TOKEN}
       - META_PAGE_ACCESS_TOKEN=${META_PAGE_ACCESS_TOKEN}
-      # URL of the Symfony MCP Server microservice
-      - MCP_SERVER_SSE_URL=http://symfony-mcp-server:8000/mcp
+      # Streamable HTTP URL of the Symfony MCP Server microservice
+      - MCP_SERVER_URL=http://host.docker.internal:8788/
     restart: unless-stopped

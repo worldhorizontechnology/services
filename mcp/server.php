@@ -3,8 +3,12 @@ declare(strict_types=1);
 
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING);
 use App\Resources\GoogleCalendarResource;
+use App\Resources\CrmIntegrationResource;
+use App\Resources\WorkspaceResourse;
 use App\Prompts\PromptGenerator;
 use App\Tools\CalendarTools;
+use App\Tools\CrmTools;
+use App\Tools\WorkspaceTools;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Mcp\Server;
@@ -42,6 +46,16 @@ $calendarTools = new CalendarTools(
     new GoogleCalendarResource(),
     $connection
 );
+$crmResource = new CrmIntegrationResource(
+    Symfony\Component\HttpClient\HttpClient::create(),
+    $_ENV['LARAVEL_CRM_URL'] ?? $_SERVER['LARAVEL_CRM_URL'] ?? getenv('LARAVEL_CRM_URL') ?: '',
+    $_ENV['LARAVEL_API_TOKEN'] ?? $_SERVER['LARAVEL_API_TOKEN'] ?? getenv('LARAVEL_API_TOKEN') ?: ''
+);
+$crmTools = new CrmTools($crmResource);
+$workspaceResource = new WorkspaceResourse(
+    $_ENV['WORKSPACE_KNOWLEDGE_PATH'] ?? $_SERVER['WORKSPACE_KNOWLEDGE_PATH'] ?? getenv('WORKSPACE_KNOWLEDGE_PATH') ?: ''
+);
+$workspaceTools = new WorkspaceTools($workspaceResource);
 $promptGenerator = new PromptGenerator();
 
 // 5. Сборка MCP Server
@@ -50,8 +64,21 @@ $server = Server::builder()
     ->setSession(new FileSessionStore(__DIR__ . '/var/sessions'))
     ->addTool([$calendarTools, 'checkCalendarSlots'], 'check_calendar_slots')
     ->addTool([$calendarTools, 'bookCalendarSlots'], 'book_calendar_slots')
+    ->addTool([$crmTools, 'createCustomer'], 'create_customer')
+    ->addTool([$crmTools, 'createChannel'], 'create_channel')
+    ->addTool([$crmTools, 'createCampaign'], 'create_campaign')
+    ->addTool([$crmTools, 'createOrder'], 'create_order')
+    ->addTool([$crmTools, 'assignExecutor'], 'assign_executor_to_order')
+    ->addTool([$crmTools, 'createCompleteBooking'], 'create_complete_service_booking')
+    ->addTool([$workspaceTools, 'searchWorkspaceInfo'], 'search_workspace_info')
     ->addPrompt([$promptGenerator, 'findCalendarSlots'], 'find_calendar_slots')
     ->addPrompt([$promptGenerator, 'bookCalendarSlot'], 'book_calendar_slot')
+    ->addPrompt([$promptGenerator, 'createCustomer'], 'create_customer')
+    ->addPrompt([$promptGenerator, 'createChannel'], 'create_channel')
+    ->addPrompt([$promptGenerator, 'createCampaign'], 'create_campaign')
+    ->addPrompt([$promptGenerator, 'assignExecutor'], 'assign_executor_to_order')
+    ->addPrompt([$promptGenerator, 'createCompleteServiceBooking'], 'create_complete_service_booking')
+    ->addPrompt([$promptGenerator, 'searchWorkspaceInfo'], 'search_workspace_info')
     ->build();
 
 // 6. Конвертация в PSR-7 и подготовка HTTP-транспорта

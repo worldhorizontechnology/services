@@ -13,6 +13,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\MarketingAnalyticsSnapshotController;
+use App\Http\Controllers\McpIntegrationController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -56,3 +57,12 @@ Route::resource('channels', ChannelController::class);
 });
 
 require __DIR__.'/auth.php';
+
+Route::prefix('api/mcp')->group(function () {
+    Route::post('/customers', [McpIntegrationController::class, 'createCustomer']);
+    Route::post('/channels', [McpIntegrationController::class, 'createChannel']);
+    Route::post('/campaigns', [McpIntegrationController::class, 'createCampaign']);
+    Route::post('/orders', [McpIntegrationController::class, 'createOrder']);
+    Route::post('/assignments', [McpIntegrationController::class, 'createAssignment']);
+    Route::post('/bookings/complete-transaction', [McpIntegrationController::class, 'createCompleteBooking']);
+});

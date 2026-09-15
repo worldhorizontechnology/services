@@ -2,14 +2,14 @@
 
 namespace App\Tools;
 
-use App\Service\CrmIntegrationService;
+use App\Resources\WorkspaceResourse;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
 
 class WorkspaceTools
 {
     public function __construct(
-        private CrmIntegrationService $crmService
+        private WorkspaceResourse $workspaceResource
     ) {}
 
     /**
@@ -20,6 +20,6 @@ class WorkspaceTools
         #[Schema(description: 'Search query regarding prices, services, or salon policies')]
         string $query
     ): string {
-        return $this->crmService->getWorkspace($query);
+        return $this->workspaceResource->search($query);
     }
 }

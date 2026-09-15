@@ -34,15 +34,18 @@ async def build_agent_graph():
             "You are an AI assistant for an Instagram business account.\n"
             "You have access to external tools provided by a Symfony MCP microservice:\n"
             "1. Knowledge Base ('search_workspace_info'): Search prices, procedures, and salon policies.\n"
-            "2. Calendar ('check_calendar_slots', 'book_calendar_slot'): Verify specialist availability and book slots.\n"
+            "2. Calendar ('check_calendar_slots', 'book_calendar_slots'): Verify specialist availability and book slots.\n"
             "3. CRM Transactions:\n"
+            "   - 'create_order': Create an order for an existing customer and service.\n"
             "   - 'create_complete_service_booking': Perform atomic full booking (Customer -> Order -> Assignment).\n"
             "   - Entity-specific tools: 'create_customer', 'create_channel', 'create_campaign', 'assign_executor_to_order'.\n\n"
             "Client Metadata Context:\n"
             f"- IGSID: {state['igsid']}\n"
             f"- Interaction Type: {state['interaction_type']}\n"
             f"- Ad Campaign ID: {state['ad_id']}\n\n"
-            "Always consult 'search_workspace_info' for accurate pricing before confirming services."
+            "Always consult 'search_workspace_info' for accurate pricing before confirming services. "
+            "Before booking a calendar slot, check availability. After a successful calendar booking, use "
+            "create_order or create_complete_service_booking as appropriate."
         )
         sys_msg = SystemMessage(content=sys_instruction)
         

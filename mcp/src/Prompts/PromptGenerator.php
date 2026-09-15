@@ -74,6 +74,98 @@ class PromptGenerator
         ];
     }
 
+    #[McpPrompt(name: 'create_customer')]
+    public function createCustomer(
+        string $name,
+        string $phone,
+        ?string $email = null,
+        ?int $channelId = null,
+        ?int $campaignId = null,
+        string $entryPoint = 'instagram_bot'
+    ): array {
+        return [
+            ['role' => 'assistant', 'content' => 'You register or update a customer in the CRM.'],
+            ['role' => 'user', 'content' => "Create or update CRM customer {$name}, phone {$phone}, email " . ($email ?? 'not provided') . ". Use channelId=" . ($channelId ?? 'none') . ", campaignId=" . ($campaignId ?? 'none') . ", entryPoint={$entryPoint}. Use create_customer and report the CRM result."]
+        ];
+    }
+
+    #[McpPrompt(name: 'create_channel')]
+    public function createChannel(string $name, string $type = 'online'): array
+    {
+        return [
+            ['role' => 'assistant', 'content' => 'You register a customer acquisition channel in the CRM.'],
+            ['role' => 'user', 'content' => "Create the {$type} acquisition channel '{$name}' using create_channel and report the created channel."]
+        ];
+    }
+
+    #[McpPrompt(name: 'create_campaign')]
+    public function createCampaign(
+        int $channelId,
+        string $name,
+        ?string $promoCode = null,
+        float $budget = 0.0
+    ): array {
+        return [
+            ['role' => 'assistant', 'content' => 'You register marketing campaigns in the CRM.'],
+            ['role' => 'user', 'content' => "Create campaign '{$name}' for channel {$channelId}, promo code " . ($promoCode ?? 'none') . ", budget {$budget}. Use create_campaign and report the result."]
+        ];
+    }
+
+    #[McpPrompt(name: 'create_order')]
+    public function createOrder(
+        int $customerId,
+        int $serviceId,
+        int $quantity = 1,
+        ?int $campaignId = null,
+        float $discountAmount = 0.0,
+        string $status = 'new',
+        string $paymentStatus = 'unpaid'
+    ): array {
+        return [
+            ['role' => 'assistant', 'content' => 'You create a CRM order for an existing customer and service. Verify the customer and service context before creating the order.'],
+            ['role' => 'user', 'content' => "Create an order for customer {$customerId}, service {$serviceId}, quantity {$quantity}, campaignId=" . ($campaignId ?? 'none') . ", discount={$discountAmount}, status={$status}, paymentStatus={$paymentStatus}. Use create_order and report the order and service line details."]
+        ];
+    }
+
+    #[McpPrompt(name: 'assign_executor_to_order')]
+    public function assignExecutor(
+        int $orderId,
+        int $executorId,
+        string $startDate,
+        ?string $dueDate = null
+    ): array {
+        return [
+            ['role' => 'assistant', 'content' => 'You assign a CRM specialist to an order.'],
+            ['role' => 'user', 'content' => "Assign executor {$executorId} to order {$orderId} starting at {$startDate}, deadline " . ($dueDate ?? 'not specified') . ". Use assign_executor_to_order and report the result."]
+        ];
+    }
+
+    #[McpPrompt(name: 'create_complete_service_booking')]
+    public function createCompleteServiceBooking(
+        string $customerName,
+        string $customerPhone,
+        int $serviceId,
+        int $executorId,
+        string $scheduledStartAt,
+        ?int $channelId = null,
+        ?int $campaignId = null,
+        float $discountAmount = 0.0
+    ): array {
+        return [
+            ['role' => 'assistant', 'content' => 'You complete a CRM service booking atomically. Confirm the service and availability before creating the booking.'],
+            ['role' => 'user', 'content' => "Create a complete service booking for {$customerName}, phone {$customerPhone}, service {$serviceId}, executor {$executorId}, scheduled at {$scheduledStartAt}. ChannelId=" . ($channelId ?? 'none') . ", campaignId=" . ($campaignId ?? 'none') . ", discount={$discountAmount}. Use create_complete_service_booking and report customer, order, and assignment results."]
+        ];
+    }
+
+    #[McpPrompt(name: 'search_workspace_info')]
+    public function searchWorkspaceInfo(string $query): array
+    {
+        return [
+            ['role' => 'assistant', 'content' => 'You answer business questions using the workspace knowledge base. Do not invent prices, services, policies, or availability.'],
+            ['role' => 'user', 'content' => "Search workspace knowledge for: {$query}. Use search_workspace_info and answer only from the returned information."]
+        ];
+    }
+
     #[McpPrompt]
     public function analyzeImage(string $imageUrl, string $question): array
     {

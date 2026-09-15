@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Resources;
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -15,47 +15,34 @@ class CrmIntegrationResource
 
     public function createCustomer(array $data): string
     {
-        return $this->post('/customers', $data);
+        return $this->post('/api/mcp/customers', $data);
     }
 
     public function createChannel(array $data): string
     {
-        return $this->post('/channels', $data);
+        return $this->post('/api/mcp/channels', $data);
     }
 
     public function createCampaign(array $data): string
     {
-        return $this->post('/campaigns', $data);
+        return $this->post('/api/mcp/campaigns', $data);
     }
 
     public function createAssignment(array $data): string
     {
-        return $this->post('/assignments', $data);
+        return $this->post('/api/mcp/assignments', $data);
     }
 
     public function executeCompleteBookingTransaction(array $payload): string
     {
         // Calls single Laravel endpoint that handles DB transaction across all tables
-        return $this->post('/bookings/complete-transaction', $payload);
+        return $this->post('/api/mcp/bookings/complete-transaction', $payload);
     }
 
     public function createOrder(array $orderData): string
-{
-    $response = $this->httpClient->request('POST', "{$this->crmUrl}/orders", [
-        'headers' => [
-            'Authorization' => "Bearer {$this->apiToken}",
-            'Accept' => 'application/json',
-        ],
-        'json' => $orderData,
-    ]);
-
-    if ($response->getStatusCode() === 201 || $response->getStatusCode() === 200) {
-        $result = $response->toArray();
-        return "Order successfully created in CRM. Order ID: " . ($result['order_id'] ?? 'OK');
+    {
+        return $this->post('/api/mcp/orders', $orderData);
     }
-
-    return "Failed to create order in CRM: " . $response->getContent(false);
-}
 
     private function post(string $endpoint, array $data): string
     {
