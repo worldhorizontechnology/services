@@ -53,8 +53,8 @@ class CalendarTools
             $params = [];
 
             if ($serviceId !== null) {
-                $query .= ' JOIN service_user su ON u.id = su.user_id
-                            WHERE su.service_id = :serviceId AND u.google_calendar_id IS NOT NULL AND u.is_active = 1';
+                $query .= ' JOIN service_user su ON u.id = su.user_id '
+                    . 'WHERE su.service_id = :serviceId AND u.google_calendar_id IS NOT NULL AND u.is_active = 1';
                 $params['serviceId'] = $serviceId;
             } elseif ($masterId !== null) {
                 $query .= ' WHERE u.id = :masterId AND u.google_calendar_id IS NOT NULL AND u.is_active = 1';
@@ -140,13 +140,13 @@ class CalendarTools
 
                     // Retrieve the first available calendar ID of an active master assigned to this service
                     $resolvedCalendarId = $this->connection->fetchOne(
-                        'SELECT u.google_calendar_id
-                         FROM users u
-                         JOIN service_user su ON u.id = su.user_id
-                         WHERE su.service_id = :serviceId
-                           AND u.is_active = 1
-                           AND u.google_calendar_id IS NOT NULL
-                         LIMIT 1',
+                        'SELECT u.google_calendar_id '
+                        . 'FROM users u '
+                        . 'JOIN service_user su ON u.id = su.user_id '
+                        . 'WHERE su.service_id = :serviceId '
+                        . 'AND u.is_active = 1 '
+                        . 'AND u.google_calendar_id IS NOT NULL '
+                        . 'LIMIT 1',
                         ['serviceId' => $serviceId]
                     );
 
