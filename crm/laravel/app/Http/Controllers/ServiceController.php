@@ -13,7 +13,7 @@ class ServiceController extends Controller
      */
     public function index()
     {
-       $services = Service::with('users:id,first_name,last_name,phone')
+    $services = Service::with('executors:id,first_name,last_name,phone')
             ->get();
 
         return Inertia::render('Services/Index', [

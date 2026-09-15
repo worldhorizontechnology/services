@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Channel;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ChannelController extends Controller
 {
@@ -12,7 +13,7 @@ class ChannelController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Channels/Index', ['channels' => Channel::withCount('campaigns')->latest()->get()]);
     }
 
     /**
@@ -28,7 +29,12 @@ class ChannelController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        Channel::create($request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'in:online,offline'],
+        ]));
+
+        return redirect()->route('channels.index');
     }
 
     /**
@@ -60,6 +66,8 @@ class ChannelController extends Controller
      */
     public function destroy(Channel $channel)
     {
-        //
+        $channel->delete();
+
+        return redirect()->route('channels.index');
     }
 }

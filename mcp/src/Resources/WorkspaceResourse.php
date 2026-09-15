@@ -9,11 +9,13 @@ use RuntimeException;
 class WorkspaceResourse
 {
 	private ?Drive $drive = null;
-	private readonly string $credentialsPath;
+	private readonly string $tokenPath;
 
-	public function __construct(string $credentialsPath)
+	public function __construct()
 	{
-		$this->credentialsPath = $credentialsPath;
+		$this->tokenPath = $_ENV['GOOGLE_WORKSPACE_TOKEN_PATH']
+			?? $_SERVER['GOOGLE_WORKSPACE_TOKEN_PATH']
+			?? dirname(__DIR__, 2) . '/var/google_workspace_token.json';
 	}
 
 	private function drive(): Drive
@@ -22,13 +24,29 @@ class WorkspaceResourse
 			return $this->drive;
 		}
 
-		if ($this->credentialsPath === '' || !is_file($this->credentialsPath)) {
-			throw new RuntimeException('GOOGLE_APPLICATION_CREDENTIALS must point to a readable service-account JSON file.');
+		$client = new Client();
+		$client->setClientId($_ENV['GOOGLE_CLIENT_ID'] ?? null);
+		$client->setClientSecret($_ENV['GOOGLE_CLIENT_SECRET'] ?? null);
+		$client->setRedirectUri($_ENV['GOOGLE_REDIRECT_URI'] ?? 'http://localhost:8000');
+		$client->setScopes([Drive::DRIVE_READONLY]);
+
+		if (is_file($this->tokenPath)) {
+			$token = json_decode((string) file_get_contents($this->tokenPath), true);
+			if (is_array($token)) {
+				$client->setAccessToken($token);
+			}
 		}
 
-		$client = new Client();
-		$client->setAuthConfig($this->credentialsPath);
-		$client->setScopes([Drive::DRIVE_READONLY]);
+		if ($client->isAccessTokenExpired()) {
+			if ($client->getRefreshToken()) {
+				$client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+				file_put_contents($this->tokenPath, json_encode($client->getAccessToken(), JSON_THROW_ON_ERROR));
+			} else {
+				$authUrl = $client->createAuthUrl();
+				throw new RuntimeException("Google Workspace OAuth authorization is required. Open this URL: {$authUrl}");
+			}
+		}
+
 		$this->drive = new Drive($client);
 
 		return $this->drive;

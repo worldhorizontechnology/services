@@ -52,9 +52,7 @@ $crmResource = new CrmIntegrationResource(
     $_ENV['LARAVEL_API_TOKEN'] ?? $_SERVER['LARAVEL_API_TOKEN'] ?? getenv('LARAVEL_API_TOKEN') ?: ''
 );
 $crmTools = new CrmTools($crmResource);
-$workspaceResource = new WorkspaceResourse(
-    $_ENV['GOOGLE_APPLICATION_CREDENTIALS'] ?? $_SERVER['GOOGLE_APPLICATION_CREDENTIALS'] ?? getenv('GOOGLE_APPLICATION_CREDENTIALS') ?: ''
-);
+$workspaceResource = new WorkspaceResourse();
 $workspaceTools = new WorkspaceTools($workspaceResource);
 $promptGenerator = new PromptGenerator();
 

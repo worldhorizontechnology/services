@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Campaign;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use App\Models\Channel;
 
 class CampaignController extends Controller
 {
@@ -12,7 +14,10 @@ class CampaignController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Campaigns/Index', [
+            'campaigns' => Campaign::with('channel')->latest()->get(),
+            'channels' => Channel::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     /**
@@ -28,7 +33,14 @@ class CampaignController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        Campaign::create($request->validate([
+            'channel_id' => ['required', 'exists:channels,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'promo_code' => ['nullable', 'string', 'max:100'],
+            'budget' => ['nullable', 'numeric', 'min:0'],
+        ]));
+
+        return redirect()->route('campaigns.index');
     }
 
     /**
@@ -60,6 +72,8 @@ class CampaignController extends Controller
      */
     public function destroy(Campaign $campaign)
     {
-        //
+        $campaign->delete();
+
+        return redirect()->route('campaigns.index');
     }
 }
