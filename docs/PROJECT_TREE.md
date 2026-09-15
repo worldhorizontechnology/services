@@ -5,7 +5,11 @@ PROJECT TREE
 
 platform/
 ├── services/
-│   ├── sales-agent/
+│   ├── agents/
+│   │   ├── instagram/sales_bot/
+│   │   └── telegram/
+│   ├── mcp/
+│   ├── crm/laravel/
 │   ├── rag-service/
 │   ├── knowledge-service/
 │   ├── telegram-service/

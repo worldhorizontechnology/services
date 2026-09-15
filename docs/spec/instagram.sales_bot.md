@@ -4,7 +4,7 @@
 
 This specification defines the internal architecture, file layout, state management, execution workflows, and interaction models strictly for the **Instagram LLM Bot Microservice** (`ig_bot_microservice`).
 
-The Agent acts as an autonomous, event-driven orchestrator built on **FastAPI**, **LangGraph**, and **Google Gemini** (`gemini-1.5-flash`), consuming tools exposed by an external Model Context Protocol (MCP) Server via SSE.
+The Agent acts as an autonomous, event-driven orchestrator built on **FastAPI**, **LangGraph**, and **Google Gemini** (`gemini-1.5-flash`), consuming tools exposed by an external Model Context Protocol (MCP) Server via Streamable HTTP JSON-RPC.
 
 ---
 
@@ -19,7 +19,7 @@ The Agent acts as an autonomous, event-driven orchestrator built on **FastAPI**,
     ├── __init__.py             # Module initialization
     ├── main.py                 # FastAPI application, webhook handlers & Meta API client
     ├── agent.py                # LangGraph state machine & Gemini LLM orchestration
-    └── mcp_connector.py        # SSE client & dynamic LangChain tool generator
+    └── mcp_connector.py        # Streamable HTTP client & dynamic LangChain tool generator
 
 ```
 
@@ -32,7 +32,7 @@ The Agent acts as an autonomous, event-driven orchestrator built on **FastAPI**,
 | `GEMINI_API_KEY` | String (Secret) | Authentication key for Google Gemini model API calls (`gemini-1.5-flash`). | `AIzaSy...` |
 | `META_VERIFY_TOKEN` | String (Secret) | Custom challenge verification token configured in the Meta Developer Portal. | `my_secure_token_123` |
 | `META_PAGE_ACCESS_TOKEN` | String (Secret) | Long-lived page token for dispatching messages via Meta Graph API v18.0. | `EAAX...` |
-| `MCP_SERVER_SSE_URL` | String (URL) | Full SSE endpoint URL of the external Symfony MCP Server microservice. | `http://mcp-server:8000/mcp` |
+| `MCP_SERVER_URL` | String (URL) | Streamable HTTP URL of the external MCP Server. | Local Docker agent: `http://host.docker.internal:8788/` |
 
 ---
 
@@ -55,21 +55,21 @@ graph TB
 
     subgraph MCP_Integration["MCP Connector Layer (app/mcp_connector.py)"]
         Client["ExternalMCPClient"]
-        SSEStream["mcp.client.sse (sse_client)"]
+        HTTPClient["httpx AsyncClient / JSON-RPC"]
         ToolWrapper["LangChain StructuredTools Factory"]
     end
 
     Webhook -->|1. Ingest Message| BGManager
     BGManager -->|2. Trigger Async Execution| StateGraph
     StateGraph -->|3. Fetch External Tools| Client
-    Client <-->|4. SSE Handshake / Tool Discovery| SSEStream
+    Client <-->|4. Initialize + tools/list| HTTPClient
     Client -->|5. Wrap Schemas| ToolWrapper
     ToolWrapper -->|6. Bind Tools| GeminiLLM
     
     StateGraph -->|7. Invoke Prompt + History| AssistantNode
     AssistantNode <-->|8. Inference| GeminiLLM
     StateGraph -->|9. Delegate Tool Call| ToolNode
-    ToolNode -->|10. Execute Tool via SSE| Client
+    ToolNode -->|10. Execute Tool via Streamable HTTP| Client
     
     StateGraph -->|11. Return Final Text| IGSender
 
@@ -129,8 +129,8 @@ sequenceDiagram
     API->>BG: add_task(execute_agent_workflow, sender_id, text, metadata)
 
     BG->>Conn: fetch_langchain_tools()
-    Conn->>MCP: sse_client(URL) & session.initialize()[cite: 1]
-    MCP-->>Conn: session.list_tools() response[cite: 1]
+    Conn->>MCP: POST / initialize (JSON-RPC)
+    MCP-->>Conn: POST / tools/list response
     Conn-->>BG: Wrapped List[StructuredTool]
 
     BG->>Graph: build_agent_graph() & graph.ainvoke(AgentState)
@@ -144,8 +144,8 @@ sequenceDiagram
     rect rgb(255, 245, 238)
         note over Graph, MCP: Loop Iteration 2: Remote Execution via MCP Client
         Graph->>Conn: Execute Tool via call_tool(name, args)
-        Conn->>MCP: session.call_tool(name, arguments=kwargs)[cite: 1]
-        MCP-->>Conn: Return result.content[0].text[cite: 1]
+        Conn->>MCP: POST / tools/call with name and arguments
+        MCP-->>Conn: Return result content text
         Conn-->>Graph: ToolMessage(content=result_text)
     end
 
@@ -178,8 +178,8 @@ stateDiagram-v2
     IngestWebhook --> FetchMCPTools: Hand off to Background Task
 
     state FetchMCPTools {
-        [*] --> ConnectSSE: ExternalMCPClient.connect()[cite: 1]
-        ConnectSSE --> ListTools: session.list_tools()[cite: 1]
+        [*] --> ConnectHTTP: ExternalMCPClient HTTP session
+        ConnectHTTP --> ListTools: POST tools/list
         ListTools --> BuildLangChainTools: Factory generates StructuredTools
     }
 
@@ -197,7 +197,7 @@ stateDiagram-v2
     RouteDecision --> EndWorkflow: tool_calls is empty
 
     state ToolsNode {
-        [*] --> ExecuteMCPCall: Exec session.call_tool() via SSE stream[cite: 1]
+        [*] --> ExecuteMCPCall: POST tools/call via Streamable HTTP
         ExecuteMCPCall --> AppendToolMessage: Add ToolMessage to AgentState
     }
 

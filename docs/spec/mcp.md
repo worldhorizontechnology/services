@@ -25,8 +25,8 @@ The microservice is built on top of the **official PHP MCP SDK (`mcp/sdk`)** mai
 * **PSR-7 Bridge:** `nyholm/psr7` & `symfony/psr-http-message-bridge` (for HTTP transport compatibility).
 
 
-* **Application Server:** FrankenPHP (Go-based application server for high-throughput HTTP streaming).
-* **Containerization:** Docker & Docker Compose.
+* **Application Server:** PHP built-in server for local development; FrankenPHP or another PHP HTTP runtime in production.
+* **Containerization:** Docker containers are used for production deployment on GCP. Local development runs services directly from the terminal.
 
 ### Integration Layer
 
@@ -58,10 +58,10 @@ Replaces legacy SSE polling loops with standard `StreamableHttpTransport`. Reque
 
 Tool execution logic is strictly categorized by domain responsibility:
 
-* **`CrmTools`:** Handles B2C entity creation and management (`customers`, `channels`, `campaigns`, `assignments`) as well as atomic transaction orchestration (`create_complete_service_booking`).
+* **`CrmTools`:** Handles B2C entity creation and management (`customers`, `channels`, `campaigns`, `orders`, `assignments`) as well as atomic transaction orchestration (`create_complete_service_booking`).
 
 
-* **`WorkspaceTools`:** Handles search queries into company knowledge bases, prices, and policies.
+* **`WorkspaceTools`:** Handles search queries into the dedicated workspace knowledge resource. The current implementation searches the configured knowledge file; Google Drive/Docs indexing remains the production knowledge-base direction.
 * **`CalendarTools`:** Interacts with Google Calendar API to check slot availability and write calendar events.
 
 ---
@@ -76,8 +76,8 @@ graph TD
         Bot[Instagram LLM Bot / MCP Client]
     end
 
-    subgraph "Symfony MCP Server (Docker / FrankenPHP)"
-        Endpoint[Controller: /mcp Endpoint]
+    subgraph "Symfony MCP Server"
+        Endpoint[Streamable HTTP: /]
         Bridge[Symfony PSR-7 Bridge]
         SDK[Mcp\\Server - mcp/sdk]
         
@@ -88,8 +88,9 @@ graph TD
         end
 
         subgraph "Infrastructure Services"
-            CRM_Service[CrmIntegrationService]
-            Cal_Service[GoogleCalendarService]
+            CRM_Service[CrmIntegrationResource]
+            Workspace_Resource[WorkspaceResourse]
+            Cal_Service[GoogleCalendarResource]
         end
     end
 
@@ -107,7 +108,7 @@ graph TD
     SDK --> Cal_Tools
 
     CRM_Tools --> CRM_Service
-    WS_Tools --> CRM_Service
+    WS_Tools --> Workspace_Resource
     Cal_Tools --> Cal_Service
 
     CRM_Service <-->|REST / JSON| Laravel_API
@@ -130,7 +131,7 @@ sequenceDiagram
     participant CRM as Laravel CRM API
     participant GCal as Google Calendar API
 
-    Bot->>Controller: POST /mcp (JSON-RPC: tools/call, name: "create_complete_service_booking")
+    Bot->>Controller: POST / (JSON-RPC: tools/call, name: "create_order")
     Controller->>Controller: Convert Symfony Request to PSR-7 Request
     Controller->>SDK: $server->run($streamableTransport)
     
@@ -172,6 +173,7 @@ sequenceDiagram
 
  | channelId, name, promoCode, budget
 
+| CRM | create_order | Creates an order and its service line for an existing customer. | customerId, serviceId, quantity, campaignId, discountAmount |
  |
 | CRM | assign_executor_to_order | Assigns an executor to an order in assignments.
 
@@ -185,7 +187,7 @@ sequenceDiagram
  |
 | Workspace | search_workspace_info | Queries knowledge base, prices, and policies. | query |
 | Calendar | check_calendar_slots | Fetches available time slots from Google Calendar. | master_name, date (YYYY-MM-DD) |
-| Calendar | book_calendar_slot | Books an event slot directly in Google Calendar. | master_name, datetime_start, client_name, igsid |
+| Calendar | book_calendar_slots | Books an event slot directly in Google Calendar. | datetime_start, client_name, igsid, calendarId, masterId, serviceId |
 
 ---
 
@@ -217,6 +219,10 @@ sequenceDiagram
 
 * **Параметры:** `channelId`, `name`, `promoCode`, `budget`
 
+* **CRM — `create_order**`
+* **Описание:** Creates an order for an existing customer and service and writes the service line to `order_service`.
+* **Параметры:** `customerId`, `serviceId`, `quantity`, `campaignId`, `discountAmount`, `status`, `paymentStatus`
+
 
 
 * **CRM — `assign_executor_to_order**`
@@ -247,6 +253,26 @@ sequenceDiagram
 * **Параметры:** `master_name`, `date` (`YYYY-MM-DD`)
 
 
-* **Calendar — `book_calendar_slot**`
+* **Calendar — `book_calendar_slots**`
 * **Описание:** Books an event slot directly in Google Calendar.
-* **Параметры:** `master_name`, `datetime_start`, `client_name`, `igsid`
+* **Параметры:** `datetime_start`, `client_name`, `igsid`, `calendarId`, `masterId`, `serviceId`
+
+## 6. Runtime and Deployment
+
+### Local development
+
+Run the MCP server directly from the `mcp` directory:
+
+```powershell
+php -S 127.0.0.1:8788 server.php
+```
+
+The local Instagram agent can reach this host from its Docker container through:
+
+```text
+http://host.docker.internal:8788/
+```
+
+### Production on GCP
+
+Deploy the MCP server, CRM, Instagram agent, and Telegram agent as separate Docker containers. Configure service URLs and secrets through the deployment environment. Do not commit API tokens or production credentials to `.env` files.

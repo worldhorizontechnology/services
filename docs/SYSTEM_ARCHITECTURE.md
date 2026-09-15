@@ -13,7 +13,7 @@
 * **Google Calendar** is accessed through a separate **Booking Service**, not directly from the AI ​​agent.
 * **Snowflake** is an analytics hub, not an operational database.
 * **All integrations are via APIs and clear service contracts.
-* **Docker containerization and independent CI/CD pipelines**.
+* **Docker containerization for production and independent CI/CD pipelines**. Local development runs services directly from the terminal.
 * Clean Architecture, strong typing, automated tests, and security-by-design.
 
 ## 2. AI Components and Standard Services
@@ -37,6 +37,19 @@
 * **Calling the Booking Service** when an appointment is needed.
 * **Calling the Payment Service** only if the specific scenario supports payment.
 The Sales Agent does not modify the Knowledge Base directly.
+
+### 2.1.1.1. Instagram Sales Agent
+
+* Receives Instagram Direct webhook events through its FastAPI service.
+* Uses Gemini and LangGraph to select tools exposed by the MCP server.
+* Calls the MCP server over Streamable HTTP JSON-RPC.
+* Searches workspace information before confirming prices or policies.
+* Checks Google Calendar availability before booking.
+* Uses CRM tools for customer, order, campaign, channel, and assignment operations.
+
+### 2.1.6. Telegram Bot
+
+The Telegram bot is a separate deployable agent/service. It is not part of the Instagram container and communicates with shared backend services through their APIs. In production it runs in its own Docker container on GCP with its own environment variables, credentials, and deployment lifecycle.
 
 ### 2.1.2. Telegram Knowledge Agent
 
@@ -128,6 +141,12 @@ Laravel CRM is the primary operating system for customer and sales management.
 * **Lead source and promotion attribution**
 * **Customer status, including new/repeat customer**
 CRM is not a replacement for Snowflake. Operational data is stored in PostgreSQL/Laravel, while analytical data and historical events are transferred to Snowflake.
+
+### 2.3 Local Development and Production Deployment
+
+Local development does not require Docker. Developers start the required services from their terminals, for example the MCP server with `php -S 127.0.0.1:8788 server.php`.
+
+Production uses separate Docker containers for the MCP server, Laravel CRM, Instagram agent, Telegram bot, and other services. Containers communicate using deployed service URLs and secrets supplied by GCP configuration, not hard-coded local hostnames.
 
 ### 2.2.2 Booking Service and Google Calendar
    
