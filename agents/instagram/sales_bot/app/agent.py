@@ -1,10 +1,14 @@
 import os
 from typing import TypedDict, Annotated
+from dotenv import load_dotenv
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+
+load_dotenv()
+
 from app.mcp_connector import ExternalMCPClient
 from app.rag import WorkspaceRAG
 
