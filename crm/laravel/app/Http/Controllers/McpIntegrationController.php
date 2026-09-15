@@ -113,6 +113,34 @@ class McpIntegrationController extends Controller
         return response()->json($result, 201);
     }
 
+    public function findMastersForService(Request $request, int $serviceId): JsonResponse
+    {
+        $this->authorizeMcp($request);
+        $request->validate([
+            'service_id' => ['nullable', 'integer'],
+        ]);
+
+        $service = Service::query()
+                ->with(['executors:id,first_name,last_name,google_calendar_id,is_active'])
+            ->findOrFail($serviceId);
+
+            $masters = $service->executors
+            ->where('is_active', true)
+            ->whereNotNull('google_calendar_id')
+            ->values()
+            ->map(static fn ($user): array => [
+                'master_id' => $user->id,
+                'master_name' => trim($user->first_name . ' ' . ($user->last_name ?? '')),
+                'calendar_id' => $user->google_calendar_id,
+            ]);
+
+        return response()->json([
+            'service_id' => $service->id,
+            'service_name' => $service->name,
+            'masters' => $masters,
+        ]);
+    }
+
     public function createCompleteBooking(Request $request): JsonResponse
     {
         $this->authorizeMcp($request);

@@ -19,7 +19,8 @@ The Agent acts as an autonomous, event-driven orchestrator built on **FastAPI**,
     ├── __init__.py             # Module initialization
     ├── main.py                 # FastAPI application, webhook handlers & Meta API client
     ├── agent.py                # LangGraph state machine & Gemini LLM orchestration
-    └── mcp_connector.py        # Streamable HTTP client & dynamic LangChain tool generator
+    ├── mcp_connector.py        # Streamable HTTP client & dynamic LangChain tool generator
+    └── rag.py                  # Workspace retrieval, chunking, embeddings & ranking
 
 ```
 
@@ -59,12 +60,22 @@ graph TB
         ToolWrapper["LangChain StructuredTools Factory"]
     end
 
+    subgraph RAG_Layer["Agent RAG Layer (app/rag.py)"]
+        WorkspaceRAG["WorkspaceRAG"]
+        Chunker["Document Chunking"]
+        Embeddings["Gemini Embeddings"]
+        Ranker["Cosine Similarity Ranking"]
+    end
+
     Webhook -->|1. Ingest Message| BGManager
     BGManager -->|2. Trigger Async Execution| StateGraph
     StateGraph -->|3. Fetch External Tools| Client
     Client <-->|4. Initialize + tools/list| HTTPClient
     Client -->|5. Wrap Schemas| ToolWrapper
     ToolWrapper -->|6. Bind Tools| GeminiLLM
+    Client -->|Workspace retrieval| WorkspaceRAG
+    WorkspaceRAG --> Chunker --> Embeddings --> Ranker
+    Ranker -->|Top-k context with source metadata| GeminiLLM
     
     StateGraph -->|7. Invoke Prompt + History| AssistantNode
     AssistantNode <-->|8. Inference| GeminiLLM
@@ -304,7 +315,20 @@ classDiagram
 
 
 
-### 9.3 MCP Streamable HTTP Connector (`app/mcp_connector.py`)
+### 9.3 Agent RAG Layer (`app/rag.py`)
+
+`WorkspaceRAG` is implemented inside the Instagram agent, not inside the MCP server.
+
+1. Calls the MCP `search_workspace_info` tool to retrieve Google Drive, Docs, and Sheets content.
+2. Splits returned documents into overlapping chunks.
+3. Creates Gemini embeddings for the user query and chunks.
+4. Ranks chunks by cosine similarity and selects the top results.
+5. Adds source ID, document name, and URL to the context passed to Gemini.
+6. Uses term-overlap ranking as a local fallback if the embeddings request fails.
+
+The RAG context is used before service clarification, price confirmation, promotion discussion, and booking decisions. The agent must not invent information absent from retrieved context.
+
+### 9.4 MCP Streamable HTTP Connector (`app/mcp_connector.py`)
 
 * **Transport Session (`ExternalMCPClient.connect`):**
 * Uses `httpx.AsyncClient` to send JSON-RPC requests to the MCP server root endpoint `/`.

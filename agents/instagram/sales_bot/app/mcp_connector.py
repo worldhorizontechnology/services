@@ -73,6 +73,10 @@ class ExternalMCPClient:
             content = result.get("result", {}).get("content", [])
             return "\n".join(item.get("text", "") for item in content if item.get("type") == "text")
 
+    async def call_tool(self, name: str, arguments: Dict[str, Any]) -> str:
+        """Call one MCP tool directly for agent-side retrieval or orchestration."""
+        return await self._call_tool(name, arguments)
+
     @staticmethod
     def _args_schema(input_schema: dict[str, Any]) -> type:
         properties = input_schema.get("properties", {})

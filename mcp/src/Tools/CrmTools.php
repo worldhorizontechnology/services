@@ -127,6 +127,17 @@ class CrmTools
     }
 
     /**
+     * Finds active masters who provide a service and returns their calendar IDs.
+     */
+    #[McpTool(name: 'find_masters_for_service')]
+    public function findMastersForService(
+        #[Schema(description: 'FK -> services.id')]
+        int $serviceId
+    ): string {
+        return $this->crmService->findMastersForService($serviceId);
+    }
+
+    /**
      * 3. FULFILLMENT MODULE (ASSIGNMENTS)
      * Assigns a master/employee (users.id) to execute an order (orders.id) in 'assignments' table.
      */

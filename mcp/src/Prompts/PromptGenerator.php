@@ -127,6 +127,15 @@ class PromptGenerator
         ];
     }
 
+    #[McpPrompt(name: 'find_masters_for_service')]
+    public function findMastersForService(int $serviceId): array
+    {
+        return [
+            ['role' => 'assistant', 'content' => 'You find active specialists who provide a selected service and use their calendar IDs for availability checks.'],
+            ['role' => 'user', 'content' => "Find active masters and Google Calendar IDs for service {$serviceId}. Use find_masters_for_service before calling check_calendar_slots. Return the master IDs, names, and calendar IDs."]
+        ];
+    }
+
     #[McpPrompt(name: 'assign_executor_to_order')]
     public function assignExecutor(
         int $orderId,

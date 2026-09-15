@@ -171,6 +171,7 @@ sequenceDiagram
  |
 | CRM | create_campaign | Registers a marketing promotion in campaigns. | channelId, name, promoCode, budget |
 | CRM | create_order | Creates an order and its service line for an existing customer. | customerId, serviceId, quantity, campaignId, discountAmount |
+| CRM | find_masters_for_service | Finds active service providers and their Google Calendar IDs. | serviceId |
 | CRM | assign_executor_to_order | Assigns an executor to an order in assignments.
 
  | orderId, executorId, startDate, dueDate
@@ -218,6 +219,10 @@ sequenceDiagram
 * **CRM — `create_order**`
 * **Описание:** Creates an order for an existing customer and service and writes the service line to `order_service`.
 * **Параметры:** `customerId`, `serviceId`, `quantity`, `campaignId`, `discountAmount`, `status`, `paymentStatus`
+
+* **CRM — `find_masters_for_service**`
+* **Описание:** Finds active masters who provide the selected service and returns their CRM IDs and Google Calendar IDs.
+* **Параметры:** `serviceId`
 
 
 

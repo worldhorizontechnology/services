@@ -44,6 +44,27 @@ class CrmIntegrationResource
         return $this->post('/api/mcp/orders', $orderData);
     }
 
+    public function findMastersForService(int $serviceId): string
+    {
+        return $this->get('/api/mcp/services/' . $serviceId . '/masters');
+    }
+
+    private function get(string $endpoint): string
+    {
+        $response = $this->httpClient->request('GET', "{$this->crmUrl}{$endpoint}", [
+            'headers' => [
+                'Authorization' => "Bearer {$this->apiToken}",
+                'Accept' => 'application/json',
+            ],
+        ]);
+
+        if ($response->getStatusCode() === 200) {
+            return json_encode($response->toArray(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+        }
+
+        return "API Error [{$response->getStatusCode()}]: " . $response->getContent(false);
+    }
+
     private function post(string $endpoint, array $data): string
     {
         $response = $this->httpClient->request('POST', "{$this->crmUrl}{$endpoint}", [

@@ -63,6 +63,7 @@ Route::prefix('api/mcp')->group(function () {
     Route::post('/channels', [McpIntegrationController::class, 'createChannel']);
     Route::post('/campaigns', [McpIntegrationController::class, 'createCampaign']);
     Route::post('/orders', [McpIntegrationController::class, 'createOrder']);
+    Route::get('/services/{serviceId}/masters', [McpIntegrationController::class, 'findMastersForService']);
     Route::post('/assignments', [McpIntegrationController::class, 'createAssignment']);
     Route::post('/bookings/complete-transaction', [McpIntegrationController::class, 'createCompleteBooking']);
 });
