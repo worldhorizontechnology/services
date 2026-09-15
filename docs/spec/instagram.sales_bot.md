@@ -14,7 +14,7 @@ The Agent acts as an autonomous, event-driven orchestrator built on **FastAPI**,
 /ig_bot_microservice
 ├── Dockerfile                  # Container image definition (Python 3.11-slim)
 ├── docker-compose.yml          # Container orchestration and environment mapping
-├── requirements.txt            # Python dependencies (FastAPI, LangGraph, MCP, etc.)
+├── requirements.txt            # Python dependencies (FastAPI, LangGraph, httpx, etc.)
 └── app/
     ├── __init__.py             # Module initialization
     ├── main.py                 # FastAPI application, webhook handlers & Meta API client
@@ -32,7 +32,7 @@ The Agent acts as an autonomous, event-driven orchestrator built on **FastAPI**,
 | `GEMINI_API_KEY` | String (Secret) | Authentication key for Google Gemini model API calls (`gemini-1.5-flash`). | `AIzaSy...` |
 | `META_VERIFY_TOKEN` | String (Secret) | Custom challenge verification token configured in the Meta Developer Portal. | `my_secure_token_123` |
 | `META_PAGE_ACCESS_TOKEN` | String (Secret) | Long-lived page token for dispatching messages via Meta Graph API v18.0. | `EAAX...` |
-| `MCP_SERVER_URL` | String (URL) | Streamable HTTP URL of the external MCP Server. | Local Docker agent: `http://host.docker.internal:8788/` |
+| `MCP_SERVER_URL` | String (URL) | Streamable HTTP URL of the external MCP Server. | Local terminal: `http://127.0.0.1:8788/`; production: GCP service URL |
 
 ---
 
@@ -304,23 +304,23 @@ classDiagram
 
 
 
-### 9.3 MCP SSE Connector (`app/mcp_connector.py`)
+### 9.3 MCP Streamable HTTP Connector (`app/mcp_connector.py`)
 
 * **Transport Session (`ExternalMCPClient.connect`):**
-* Establishes a persistent SSE stream using `mcp.client.sse.sse_client` and `ClientSession`.
+* Uses `httpx.AsyncClient` to send JSON-RPC requests to the MCP server root endpoint `/`.
 
 
-* Performs the standard MCP JSON-RPC protocol initialization handshake (`session.initialize()`).
+* Performs the standard MCP JSON-RPC protocol initialization handshake (`initialize`).
 
 
 
 
 * **Dynamic Tool Factory (`fetch_langchain_tools`):**
-* Fetches available tool definitions from the external Symfony MCP Server via `session.list_tools()`.
+* Fetches available tool definitions from the external MCP Server via `tools/list`.
 
 
 * Maps MCP parameter schemas directly into native LangChain `StructuredTool` instances.
-* Wraps execution inside an async closure that executes `session.call_tool()` over SSE streams and returns the text result.
+* Wraps execution inside an async closure that executes `tools/call` over Streamable HTTP and returns the text result.
 
 
 

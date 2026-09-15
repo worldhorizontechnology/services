@@ -52,7 +52,7 @@ Using `mcp/sdk`, capabilities are defined directly in dedicated Tool classes (`s
 
 ### 3.2 Streamable HTTP Transport
 
-Replaces legacy SSE polling loops with standard `StreamableHttpTransport`. Requests arriving at Symfony's `/mcp` endpoint are converted to PSR-7 `ServerRequestInterface` instances, processed by `Mcp\Server`, and streamed directly back to the client.
+Replaces legacy SSE polling loops with standard `StreamableHttpTransport`. Requests arriving at the MCP server root endpoint `/` are converted to PSR-7 `ServerRequestInterface` instances, processed by `Mcp\Server`, and returned as JSON or event-stream responses.
 
 ### 3.3 Domain Separation of Tools (SoC)
 
@@ -169,12 +169,8 @@ sequenceDiagram
  | name, type (online/offline)
 
  |
-| CRM | create_campaign | Registers a marketing promotion in campaigns.
-
- | channelId, name, promoCode, budget
-
+| CRM | create_campaign | Registers a marketing promotion in campaigns. | channelId, name, promoCode, budget |
 | CRM | create_order | Creates an order and its service line for an existing customer. | customerId, serviceId, quantity, campaignId, discountAmount |
- |
 | CRM | assign_executor_to_order | Assigns an executor to an order in assignments.
 
  | orderId, executorId, startDate, dueDate
@@ -186,7 +182,7 @@ sequenceDiagram
 
  |
 | Workspace | search_workspace_info | Queries knowledge base, prices, and policies. | query |
-| Calendar | check_calendar_slots | Fetches available time slots from Google Calendar. | master_name, date (YYYY-MM-DD) |
+| Calendar | check_calendar_slots | Fetches available time slots from Google Calendar. | startDate, endDate, serviceId, masterId |
 | Calendar | book_calendar_slots | Books an event slot directly in Google Calendar. | datetime_start, client_name, igsid, calendarId, masterId, serviceId |
 
 ---
@@ -250,7 +246,7 @@ sequenceDiagram
 
 * **Calendar — `check_calendar_slots**`
 * **Описание:** Fetches available time slots for a specialist on a date from Google Calendar.
-* **Параметры:** `master_name`, `date` (`YYYY-MM-DD`)
+* **Параметры:** `startDate`, `endDate` (`YYYY-MM-DD`), optional `serviceId`, optional `masterId`
 
 
 * **Calendar — `book_calendar_slots**`
@@ -267,11 +263,13 @@ Run the MCP server directly from the `mcp` directory:
 php -S 127.0.0.1:8788 server.php
 ```
 
-The local Instagram agent can reach this host from its Docker container through:
+When the Instagram agent is also started directly from the terminal, it uses:
 
 ```text
-http://host.docker.internal:8788/
+http://127.0.0.1:8788/
 ```
+
+If a local agent container is used for an integration test, it can use `http://host.docker.internal:8788/` instead. This is not required for normal local development.
 
 ### Production on GCP
 
