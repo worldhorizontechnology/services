@@ -1,0 +1,13 @@
+{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/call",
+    "params": {
+        "name": "check_calendar_slots",
+        "arguments": {
+            "startDate": "2026-09-16",
+            "endDate": "2026-09-18",
+            "serviceId": 1
+        }
+    }
+}

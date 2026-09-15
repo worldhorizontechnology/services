@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Service;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ServiceController extends Controller
 {
@@ -12,7 +13,12 @@ class ServiceController extends Controller
      */
     public function index()
     {
-        //
+       $services = Service::with('users:id,first_name,last_name,phone')
+            ->get();
+
+        return Inertia::render('Services/Index', [
+            'services' => $services,
+        ]);
     }
 
     /**

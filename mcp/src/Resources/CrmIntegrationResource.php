@@ -5,7 +5,7 @@ namespace App\Service;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-class CrmIntegrationService
+class CrmIntegrationResource
 {
     public function __construct(
         private HttpClientInterface $httpClient,

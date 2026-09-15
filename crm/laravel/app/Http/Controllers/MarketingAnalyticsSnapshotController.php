@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\MarketingAnalyticsSnapshot;
@@ -8,35 +8,44 @@ use App\Models\Campaign;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class MarketingAnalyticsSnapshotController extends Controller
 {
     /**
      * 1. DISPLAY LISTING (index)
      */
-    public function index(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'period_type' => 'nullable|string|in:daily,weekly,monthly',
-            'channel_id'  => 'nullable|integer|exists:channels,id',
-            'campaign_id' => 'nullable|integer|exists:campaigns,id',
-            'date_from'   => 'nullable|date',
-            'date_to'     => 'nullable|date',
-            'per_page'    => 'nullable|integer|min:1|max:100',
-        ]);
+   public function index(Request $request): Response
+{
+    $validated = $request->validate([
+        'period_type' => 'nullable|string|in:daily,weekly,monthly',
+        'channel_id'  => 'nullable|integer|exists:channels,id',
+        'campaign_id' => 'nullable|integer|exists:campaigns,id',
+        'date_from'   => 'nullable|date',
+        'date_to'     => 'nullable|date',
+        'per_page'    => 'nullable|integer|min:1|max:100',
+    ]);
 
-        $query = MarketingAnalyticsSnapshot::query()
-            ->with(['channel', 'campaign'])
-            ->when($request->filled('period_type'), fn($q) => $q->where('period_type', $validated['period_type']))
-            ->when($request->filled('channel_id'), fn($q) => $q->where('channel_id', $validated['channel_id']))
-            ->when($request->filled('campaign_id'), fn($q) => $q->where('campaign_id', $validated['campaign_id']))
-            ->when($request->filled('date_from'), fn($q) => $q->where('period_date', '>=', $validated['date_from']))
-            ->when($request->filled('date_to'), fn($q) => $q->where('period_date', '<=', $validated['date_to']))
-            ->orderByDesc('period_date')
-            ->orderByDesc('id');
+    $snapshots = MarketingAnalyticsSnapshot::query()
+        ->with(['channel:id,name', 'campaign:id,name'])
+        ->when($request->filled('period_type'), fn($q) => $q->where('period_type', $validated['period_type']))
+        ->when($request->filled('channel_id'), fn($q) => $q->where('channel_id', $validated['channel_id']))
+        ->when($request->filled('campaign_id'), fn($q) => $q->where('campaign_id', $validated['campaign_id']))
+        ->when($request->filled('date_from'), fn($q) => $q->where('period_date', '>=', $validated['date_from']))
+        ->when($request->filled('date_to'), fn($q) => $q->where('period_date', '<=', $validated['date_to']))
+        ->orderByDesc('period_date')
+        ->orderByDesc('id')
+        ->paginate($request->input('per_page', 100))
+        ->withQueryString();
 
-        return response()->json($query->paginate($request->input('per_page', 15)));
-    }
+    return Inertia::render('Analytics/Index', [
+        'snapshots' => $snapshots,
+        'channels'  => Channel::select('id', 'name')->get(),
+        'campaigns' => Campaign::select('id', 'name')->get(),
+        'filters'   => $request->only(['period_type', 'channel_id', 'campaign_id', 'date_from', 'date_to']),
+    ]);
+}
 
     /**
      * 2. SHOW FORM / DATA FOR CREATION (create)

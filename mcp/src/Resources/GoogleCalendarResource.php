@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Resources;
 
 use Google\Client;
 use Google\Service\Calendar;
@@ -9,8 +9,9 @@ use Google\Service\Calendar\FreeBusyRequestItem;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
+use Mcp\Capability\Attribute\McpResource;
 
-class GoogleCalendarService
+class GoogleCalendarResource
 {
     private Calendar $calendar;
 
@@ -18,7 +19,7 @@ class GoogleCalendarService
     {
         $client = new Client();
         
-        // Берем данные строго из $_ENV (Symfony-стиль)
+        // Fetch credentials strictly from $_ENV (Symfony style)
         $client->setClientId($_ENV['GOOGLE_CLIENT_ID'] ?? null);
         $client->setClientSecret($_ENV['GOOGLE_CLIENT_SECRET'] ?? null);
         $client->setRedirectUri($_ENV['GOOGLE_REDIRECT_URI'] ?? 'http://localhost');
@@ -27,7 +28,7 @@ class GoogleCalendarService
         $client->setAccessType('offline');
         $client->setPrompt('select_account consent');
 
-        // Путь для сохранения токена (например, в папку var вашего Symfony проекта)
+        // Path to store access token (e.g. in the var directory of a Symfony project)
         $tokenPath = dirname(__DIR__, 2) . '/var/google_calendar_token.json';
 
         if (file_exists($tokenPath)) {
@@ -40,26 +41,29 @@ class GoogleCalendarService
                 $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
                 file_put_contents($tokenPath, json_encode($client->getAccessToken()));
             } else {
-                // Если запускаем в консоли для первой генерации токена
+                // If running in CLI for initial token generation
                 $authUrl = $client->createAuthUrl();
                 
                 echo "\n==================================================\n";
-                echo "ОТКРОЙТЕ ЭТУ ССЫЛКУ В БРАУЗЕРЕ ДЛЯ АВТОРИЗАЦИИ:\n";
+                echo "OPEN THIS URL IN BROWSER FOR AUTHORIZATION:\n";
                 echo $authUrl . "\n";
                 echo "==================================================\n\n";
                 
-                echo "После авторизации скопируйте код из адресной строки (параметр ?code=...) и вставьте сюда: ";
-                $authCode = trim(fgets(STDIN));
+                $authCode = $_GET['code'] ?? null;
+
+                if (!$authCode) {
+                    throw new Exception("Authorization code is missing from the URL parameters.");
+          }
                 
                 if (empty($authCode)) {
-                    throw new Exception("Код авторизации не может быть пустым.");
+                    throw new Exception("Authorization code cannot be empty.");
                 }
 
                 $accessToken = $client->fetchAccessTokenWithAuthCode($authCode);
                 $client->setAccessToken($accessToken);
 
                 file_put_contents($tokenPath, json_encode($client->getAccessToken()));
-                echo "\n[УСПЕХ] Файл google_calendar_token.json создан в папке var!\n";
+                echo "\n[SUCCESS] File google_calendar_token.json was created in var directory!\n";
             }
         }
 
@@ -69,14 +73,19 @@ class GoogleCalendarService
     /**
      * Executes ONE single Free/Busy query for all calendars and returns slots mapped to each calendar ID.
      */
+    #[McpResource(
+        uri: 'calendar://slots/available',
+        name: 'google_calendar_slots',
+        mimeType: 'application/json'
+    )]
     public function getAvailableSlots(
         array $calendarIds,
         string $startDate,
         string $endDate,
         int $durationMinutes = 60,
         string $workStart = '09:00',
-        string $workEnd = '18:00',
-        int $stepMinutes = 30
+        string $workEnd = '22:00',
+        int $stepMinutes = 60
     ): array {
         $timezone = new DateTimeZone('Europe/Madrid');
         $rangeStart = new DateTimeImmutable("$startDate $workStart", $timezone);
@@ -101,10 +110,12 @@ class GoogleCalendarService
         $result = [];
 
         foreach ($calendarIds as $calendarId) {
-            $data = $calendarsData->get($calendarId);
+            $data = is_array($calendarsData)
+                ? ($calendarsData[$calendarId] ?? null)
+                : $calendarsData->get($calendarId);
             $busyIntervals = [];
 
-            if ($data) {
+            if ($data && method_exists($data, 'getBusy')) {
                 foreach ($data->getBusy() as $period) {
                     $busyIntervals[] = [
                         'start' => new DateTimeImmutable($period->getStart(), $timezone),
