@@ -53,7 +53,7 @@ class GoogleCalendarResource
 
                 if (!$authCode) {
                     throw new Exception("Authorization code is missing from the URL parameters.");
-          }
+                }
                 
                 if (empty($authCode)) {
                     throw new Exception("Authorization code cannot be empty.");
@@ -185,7 +185,7 @@ class GoogleCalendarResource
 
         if (!empty($igsid)) {
             $cleanIgsid = ltrim($igsid, '@');
-            $instagramUrl = "Instagram: https://instagram.com" . $cleanIgsid;
+            $instagramUrl = "Instagram: https://instagram.com/" . $cleanIgsid;
             $description = $description ? "{$description}\n\n{$instagramUrl}" : $instagramUrl;
         }
 
