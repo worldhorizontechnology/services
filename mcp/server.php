@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING);
 use App\Resources\GoogleCalendarResource;
+use App\Prompts\PromptGenerator;
 use App\Tools\CalendarTools;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
@@ -41,6 +42,7 @@ $calendarTools = new CalendarTools(
     new GoogleCalendarResource(),
     $connection
 );
+$promptGenerator = new PromptGenerator();
 
 // 5. Сборка MCP Server
 $server = Server::builder()
@@ -48,6 +50,8 @@ $server = Server::builder()
     ->setSession(new FileSessionStore(__DIR__ . '/var/sessions'))
     ->addTool([$calendarTools, 'checkCalendarSlots'], 'check_calendar_slots')
     ->addTool([$calendarTools, 'bookCalendarSlots'], 'book_calendar_slots')
+    ->addPrompt([$promptGenerator, 'findCalendarSlots'], 'find_calendar_slots')
+    ->addPrompt([$promptGenerator, 'bookCalendarSlot'], 'book_calendar_slot')
     ->build();
 
 // 6. Конвертация в PSR-7 и подготовка HTTP-транспорта
