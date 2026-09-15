@@ -53,7 +53,7 @@ $crmResource = new CrmIntegrationResource(
 );
 $crmTools = new CrmTools($crmResource);
 $workspaceResource = new WorkspaceResourse(
-    $_ENV['WORKSPACE_KNOWLEDGE_PATH'] ?? $_SERVER['WORKSPACE_KNOWLEDGE_PATH'] ?? getenv('WORKSPACE_KNOWLEDGE_PATH') ?: ''
+    $_ENV['GOOGLE_APPLICATION_CREDENTIALS'] ?? $_SERVER['GOOGLE_APPLICATION_CREDENTIALS'] ?? getenv('GOOGLE_APPLICATION_CREDENTIALS') ?: ''
 );
 $workspaceTools = new WorkspaceTools($workspaceResource);
 $promptGenerator = new PromptGenerator();

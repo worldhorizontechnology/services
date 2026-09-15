@@ -61,7 +61,7 @@ Tool execution logic is strictly categorized by domain responsibility:
 * **`CrmTools`:** Handles B2C entity creation and management (`customers`, `channels`, `campaigns`, `orders`, `assignments`) as well as atomic transaction orchestration (`create_complete_service_booking`).
 
 
-* **`WorkspaceTools`:** Handles search queries into the dedicated workspace knowledge resource. The current implementation searches the configured knowledge file; Google Drive/Docs indexing remains the production knowledge-base direction.
+* **`WorkspaceTools`:** Handles search queries through the dedicated `WorkspaceResourse`, which uses the Google Drive API to find workspace documents and exports Google Docs/Sheets content for the agent.
 * **`CalendarTools`:** Interacts with Google Calendar API to check slot availability and write calendar events.
 
 ---
