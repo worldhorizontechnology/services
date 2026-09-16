@@ -28,7 +28,13 @@ class WorkspaceResourse
 		$client->setClientId($_ENV['GOOGLE_CLIENT_ID'] ?? null);
 		$client->setClientSecret($_ENV['GOOGLE_CLIENT_SECRET'] ?? null);
 		$client->setRedirectUri($_ENV['GOOGLE_REDIRECT_URI'] ?? 'http://localhost:8000');
-		$client->setScopes([Drive::DRIVE_READONLY]);
+		$client->setScopes([
+			'https://www.googleapis.com/auth/calendar',
+			Drive::DRIVE_READONLY,
+		]);
+		$client->setAccessType('offline');
+		$client->setIncludeGrantedScopes(true);
+		$client->setPrompt('consent');
 
 		if (is_file($this->tokenPath)) {
 			$token = json_decode((string) file_get_contents($this->tokenPath), true);
