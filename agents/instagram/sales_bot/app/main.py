@@ -1,5 +1,6 @@
 import httpx
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
+from fastapi.responses import PlainTextResponse
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field, ValidationError
 from app.agent import build_agent_graph
@@ -59,8 +60,8 @@ async def verify_webhook(request: Request):
     token = request.query_params.get("hub.verify_token")
     challenge = request.query_params.get("hub.challenge")
 
-    if mode == "subscribe" and token == require(META_VERIFY_TOKEN, "META_VERIFY_TOKEN"):
-        return int(challenge)
+    if mode == "subscribe" and token == require(META_VERIFY_TOKEN, "META_VERIFY_TOKEN") and challenge:
+        return PlainTextResponse(content=challenge, status_code=200)
     raise HTTPException(status_code=403, detail="Verification failed")
 
 @app.post("/webhook")
