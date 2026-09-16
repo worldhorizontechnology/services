@@ -26,7 +26,7 @@ async def build_agent_graph():
     
     # Initialize Gemini model with active MCP tools
     llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash", 
+        model="gemini-3.5-flash-lite", 
         temperature=0.2,
         google_api_key=require(GEMINI_API_KEY, "GEMINI_API_KEY")
     )
