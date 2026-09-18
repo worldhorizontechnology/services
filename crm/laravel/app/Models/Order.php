@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Notifications\TelegramNotification;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * @property int $id
@@ -18,7 +19,7 @@ use Illuminate\Notifications\Notifiable;
  */
 class Order extends Model
 {
-    use Notifiable;
+    use HasFactory, Notifiable;
     protected $fillable = ['customer_id', 'campaign_id', 'status', 'payment_status', 'discount_amount', 'total_amount'];
 
     protected $casts = [

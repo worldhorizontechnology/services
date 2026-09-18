@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Service extends Model
 {
+    use HasFactory;
     protected $fillable = ['name', 'price', 'is_active'];
 
     protected $casts = [
@@ -20,10 +22,9 @@ class Service extends Model
                     ->withPivot('id', 'quantity', 'price');
     }
 
-    public function executors()
+    public function executors(): BelongsToMany
     {
-         return $this->belongsToMany(User::class, 'service_user')
-                    ->withPivot('id', 'price', 'is_active');
+        return $this->belongsToMany(User::class, 'service_user');
     }
 
 }

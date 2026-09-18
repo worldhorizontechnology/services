@@ -6,11 +6,22 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
+const props = defineProps({ services: { type: Array, default: () => [] } });
+
 const form = useForm({
-    name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     password: '',
     password_confirmation: '',
+    role: 'client',
+    phone: '',
+    telegram_id: '',
+    telegram_username: '',
+    calendarId: '',
+    instagram_id: '',
+    instagram_username: '',
+    services: [],
 });
 
 const submit = () => {
@@ -25,20 +36,43 @@ const submit = () => {
         <Head title="Register" />
 
         <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="name" value="Name" />
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                <InputLabel for="first_name" value="First name" />
 
                 <TextInput
-                    id="name"
+                    id="first_name"
                     type="text"
                     class="mt-1 block w-full"
-                    v-model="form.name"
+                    v-model="form.first_name"
                     required
                     autofocus
-                    autocomplete="name"
+                    autocomplete="given-name"
                 />
 
-                <InputError class="mt-2" :message="form.errors.name" />
+                <InputError class="mt-2" :message="form.errors.first_name" />
+                </div>
+                <div>
+                    <InputLabel for="last_name" value="Last name" />
+                    <TextInput id="last_name" type="text" class="mt-1 block w-full" v-model="form.last_name" autocomplete="family-name" />
+                    <InputError class="mt-2" :message="form.errors.last_name" />
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="role" value="Role" />
+                <select id="role" v-model="form.role" class="mt-1 block w-full rounded-md border-border bg-main text-txt-main">
+                    <option value="client">Client</option><option value="manager">Manager</option><option value="executor">Executor</option><option value="admin">Admin</option>
+                </select>
+                <InputError class="mt-2" :message="form.errors.role" />
+            </div>
+
+            <div v-if="form.role === 'executor'" class="mt-4">
+                <InputLabel for="services" value="Qualified services" />
+                <select id="services" v-model="form.services" multiple class="mt-1 block h-28 w-full rounded-md border-border bg-main text-txt-main">
+                    <option v-for="service in props.services" :key="service.id" :value="service.id">{{ service.name }}</option>
+                </select>
+                <InputError class="mt-2" :message="form.errors.services" />
             </div>
 
             <div class="mt-4">

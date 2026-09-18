@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use App\Notifications\TelegramNotification;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Customer extends Model
 {
-     use Notifiable;
+    use HasFactory, Notifiable;
     protected $fillable = ['first_name', 'last_name', 'phone', 'email', 'channel_id', 'campaign_id', 'entry_point', 'status', 'telegram_id', 'instagram_id', 'whatsapp', 'comment'];
 
     public function channel(): BelongsTo

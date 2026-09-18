@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Notifications\TelegramNotification;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Payment extends Model
 {
-    use Notifiable;
+    use HasFactory, Notifiable;
     protected $fillable = ['order_id', 'amount', 'method', 'paid_at'];
 
     protected $casts = [

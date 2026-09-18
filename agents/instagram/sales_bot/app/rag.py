@@ -20,10 +20,13 @@ class WorkspaceRAG:
         self.embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 
     async def retrieve(self, query: str) -> str:
-        query = QueryInput(query=query).query
-        raw_result = await self.mcp_client.call_tool("search_workspace_info", {"query": query})
-        payload = WorkspaceSearchResult.model_validate_json(raw_result)
-        chunks = self._build_chunks([match.model_dump() for match in payload.matches])
+        try:
+            query = QueryInput(query=query).query
+            raw_result = await self.mcp_client.call_tool("search_workspace_info", {"query": query})
+            payload = WorkspaceSearchResult.model_validate_json(raw_result)
+            chunks = self._build_chunks([match.model_dump() for match in payload.matches])
+        except Exception as error:
+            raise RuntimeError(f"Workspace RAG retrieval failed: {error}") from error
 
         if not chunks:
             return "<workspace_context>No relevant workspace information was found.</workspace_context>"

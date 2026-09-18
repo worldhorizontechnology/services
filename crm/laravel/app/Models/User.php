@@ -28,6 +28,7 @@ class User extends Authenticatable
         'telegram_id', 
         'telegram_username',
         'calendarId', 
+        'google_calendar_id',
         'instagram_id', 
         'instagram_username'
     ];

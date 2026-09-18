@@ -1,11 +1,11 @@
-import os
 from typing import Any, Dict, List
 
 import httpx
 from langchain_core.tools import StructuredTool
 from pydantic import create_model, Field
 
-MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://host.docker.internal:8788/")
+from app.config import MCP_SERVER_URL
+
 
 class ExternalMCPClient:
     """Calls the Symfony MCP server through Streamable HTTP JSON-RPC."""
@@ -25,53 +25,53 @@ class ExternalMCPClient:
         if session_id:
             headers["Mcp-Session-Id"] = session_id
 
-        response = await client.post(
-            MCP_SERVER_URL,
-            headers=headers,
-            json={"jsonrpc": "2.0", "id": request_id, "method": method, "params": params or {}},
-        )
-        response.raise_for_status()
-        return response.json(), response.headers.get("Mcp-Session-Id", session_id)
+        try:
+            response = await client.post(
+                MCP_SERVER_URL,
+                headers=headers,
+                json={"jsonrpc": "2.0", "id": request_id, "method": method, "params": params or {}},
+            )
+            response.raise_for_status()
+            return response.json(), response.headers.get("Mcp-Session-Id", session_id)
+        except Exception as error:
+            raise RuntimeError(f"MCP HTTP {method} failed at {MCP_SERVER_URL}: {error}") from error
 
     async def _open_session(self, client: httpx.AsyncClient) -> str | None:
-        result, session_id = await self._request(
-            client,
-            1,
-            "initialize",
-            {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {},
-                "clientInfo": {"name": "instagram-sales-agent", "version": "1.0.0"},
-            },
-        )
+        try:
+            result, session_id = await self._request(
+                client, 1, "initialize",
+                {"protocolVersion": "2024-11-05", "capabilities": {},
+                 "clientInfo": {"name": "instagram-sales-agent", "version": "1.0.0"}},
+            )
+        except Exception as error:
+            raise RuntimeError(f"MCP initialize request failed: {error}") from error
         if "error" in result:
             raise RuntimeError(f"MCP initialize failed: {result['error']}")
 
         return session_id
 
     async def _list_tools(self) -> List[dict[str, Any]]:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            session_id = await self._open_session(client)
-            result, _ = await self._request(client, 2, "tools/list", session_id=session_id)
-            if "error" in result:
-                raise RuntimeError(f"MCP tools/list failed: {result['error']}")
-            return result["result"]["tools"]
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                session_id = await self._open_session(client)
+                result, _ = await self._request(client, 2, "tools/list", session_id=session_id)
+                if "error" in result:
+                    raise RuntimeError(f"MCP tools/list failed: {result['error']}")
+                return result["result"]["tools"]
+        except Exception as error:
+            raise RuntimeError(f"Could not load MCP tools: {error}") from error
 
     async def _call_tool(self, name: str, arguments: Dict[str, Any]) -> str:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            session_id = await self._open_session(client)
-            result, _ = await self._request(
-                client,
-                2,
-                "tools/call",
-                {"name": name, "arguments": arguments},
-                session_id,
-            )
-            if "error" in result:
-                raise RuntimeError(f"MCP tool {name} failed: {result['error']}")
-
-            content = result.get("result", {}).get("content", [])
-            return "\n".join(item.get("text", "") for item in content if item.get("type") == "text")
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                session_id = await self._open_session(client)
+                result, _ = await self._request(client, 2, "tools/call", {"name": name, "arguments": arguments}, session_id)
+                if "error" in result:
+                    raise RuntimeError(f"MCP tool {name} failed: {result['error']}")
+                content = result.get("result", {}).get("content", [])
+                return "\n".join(item.get("text", "") for item in content if item.get("type") == "text")
+        except Exception as error:
+            raise RuntimeError(f"MCP tool call failed for {name}: {error}") from error
 
     async def call_tool(self, name: str, arguments: Dict[str, Any]) -> str:
         """Call one MCP tool directly for agent-side retrieval or orchestration."""

@@ -1,7 +1,7 @@
 from typing import TypedDict, Annotated
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
-from langgraph.prebuilt import ToolNode
+from langgraph.prebuilt.tool_node import ToolNode
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
@@ -20,9 +20,12 @@ class AgentState(TypedDict):
 async def build_agent_graph():
     """Builds and compiles the LangGraph multi-agent orchestrator."""
     
-    mcp_client = ExternalMCPClient()
-    tools = await mcp_client.fetch_langchain_tools()
-    rag = WorkspaceRAG(mcp_client)
+    try:
+        mcp_client = ExternalMCPClient()
+        tools = await mcp_client.fetch_langchain_tools()
+        rag = WorkspaceRAG(mcp_client)
+    except Exception as error:
+        raise RuntimeError(f"Could not initialize agent MCP/RAG dependencies: {error}") from error
     
     # Initialize Gemini model with active MCP tools
     llm = ChatGoogleGenerativeAI(
@@ -75,8 +78,11 @@ async def build_agent_graph():
         )
         sys_msg = SystemMessage(content=sys_instruction)
         
-        response = await llm_with_tools.ainvoke([sys_msg] + state["messages"])
-        return {"messages": [response], "workspace_context": workspace_context}
+        try:
+            response = await llm_with_tools.ainvoke([sys_msg] + state["messages"])
+            return {"messages": [response], "workspace_context": workspace_context}
+        except Exception as error:
+            raise RuntimeError(f"Gemini agent invocation failed: {error}") from error
 
     # LangGraph construction
     workflow = StateGraph(AgentState)

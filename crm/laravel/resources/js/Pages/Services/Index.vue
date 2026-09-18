@@ -1,37 +1,19 @@
-<template>
-    <MainLayout>
-        <div class="flex items-center justify-between mb-8">
-            <div>
-                <h1 class="text-2xl font-black text-txt-main">Service Catalog</h1>
-                <p class="text-txt-muted text-sm mt-1">Manage available services and pricing</p>
-            </div>
-            <button 
-                @click="showForm = true"
-                class="px-5 py-2.5 bg-accent-beige text-main rounded-xl text-sm font-bold hover:bg-txt-main transition-colors"
-            >
-                + Add Service
-            </button>
-        </div>
-
-        <!-- Render the grid/table of services here -->
-        <ServicesTab v-if="!showForm" :services="services" />
-
-        <!-- Render the form when adding a new service -->
-        <div v-else class="flex justify-center mt-10">
-            <ServiceForm class="w-full" @cancel="showForm = false" @saved="showForm = false" />
-        </div>
-    </MainLayout>
-</template>
-
 <script setup>
-import { ref } from 'vue';
-import MainLayout from '@/Layouts/MainLayout.vue';
-import ServicesTab from '@/Components/ServicesTab.vue'; // The grid component you have
-import ServiceForm from '@/Components/ServiceForm.vue';
+import { Head, Link } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
 
-defineProps({
-    services: Array
-});
-
-const showForm = ref(false);
+defineProps({ services: { type: Array, default: () => [] } });
 </script>
+
+<template>
+    <Head title="Services" />
+    <AppLayout title="Service Catalog">
+        <section class="space-y-6">
+            <div class="flex items-center justify-between"><div><p class="text-sm text-txt-muted">Services and qualified executors</p></div><Link :href="route('services.create')" class="rounded-xl bg-accent-beige px-4 py-2.5 text-sm font-semibold text-main">Add service</Link></div>
+            <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                <article v-for="service in services" :key="service.id" class="rounded-2xl border border-border bg-panel p-6 shadow-xl"><div class="flex items-start justify-between"><span class="rounded bg-accent-pink/10 px-2 py-1 font-mono text-xs text-accent-pink">ID {{ service.id }}</span><strong class="text-lg text-accent-beige">${{ service.price }}</strong></div><h2 class="mt-5 font-bold text-txt-main">{{ service.name }}</h2><p class="mt-2 text-sm text-txt-muted">{{ service.executors?.length || 0 }} qualified executors</p><span class="mt-6 inline-block rounded-full border border-accent-pink/20 bg-accent-pink/10 px-2.5 py-1 text-xs text-accent-pink">{{ service.is_active ? 'Active' : 'Inactive' }}</span></article>
+                <div v-if="!services.length" class="rounded-2xl border border-dashed border-border p-10 text-center text-txt-muted md:col-span-2 xl:col-span-3">No services yet.</div>
+            </div>
+        </section>
+    </AppLayout>
+</template>

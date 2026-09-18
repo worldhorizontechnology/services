@@ -3,3 +3,9 @@ dist/
 .vite/
 .DS_Store
 mcp/.env
+
+agents/
+venv/
+.venv/
+
+agents/instagram/sales_bot/.env

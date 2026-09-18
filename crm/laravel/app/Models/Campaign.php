@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Campaign extends Model
 {
+    use HasFactory;
     protected $fillable = ['channel_id', 'name', 'promo_code', 'budget', 'start_date', 'end_date'];
 
     protected $casts = [
