@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
+use App\Models\Channel;
+use App\Models\Campaign;
 
 class CustomerController extends Controller
 {
@@ -13,15 +16,18 @@ class CustomerController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Customers/Index', ['customers' => Customer::latest()->paginate(20)]);
+        return Inertia::render('Customers/Index', ['customers' => Customer::with(['channel', 'campaign'])->latest()->paginate(20)]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): Response
     {
-        //
+        return Inertia::render('Customers/Create', [
+            'channels' => Channel::orderBy('name')->get(['id', 'name']),
+            'campaigns' => Campaign::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     /**
@@ -55,9 +61,13 @@ class CustomerController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Customer $customer)
+    public function edit(Customer $customer): Response
     {
-        //
+        return Inertia::render('Customers/Edit', [
+            'customer' => $customer,
+            'channels' => Channel::orderBy('name')->get(['id', 'name']),
+            'campaigns' => Campaign::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     /**
@@ -65,7 +75,17 @@ class CustomerController extends Controller
      */
     public function update(Request $request, Customer $customer)
     {
-        //
+        $customer->update($request->validate([
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'channel_id' => ['nullable', 'exists:channels,id'],
+            'campaign_id' => ['nullable', 'exists:campaigns,id'],
+            'entry_point' => ['nullable', 'string', 'max:100'],
+        ]));
+
+        return redirect()->route('customers.index');
     }
 
     /**

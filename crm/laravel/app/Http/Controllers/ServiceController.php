@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ServiceController extends Controller
 {
@@ -24,9 +25,9 @@ class ServiceController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): Response
     {
-        //
+        return Inertia::render('Services/Create');
     }
 
     /**
@@ -34,7 +35,13 @@ class ServiceController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        Service::create($request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'is_active' => ['boolean'],
+        ]));
+
+        return redirect()->route('services.index');
     }
 
     /**
@@ -48,9 +55,11 @@ class ServiceController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Service $service)
+    public function edit(Service $service): Response
     {
-        //
+        return Inertia::render('Services/Edit', [
+            'service' => $service,
+        ]);
     }
 
     /**
@@ -58,7 +67,13 @@ class ServiceController extends Controller
      */
     public function update(Request $request, Service $service)
     {
-        //
+        $service->update($request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'is_active' => ['boolean'],
+        ]));
+
+        return redirect()->route('services.index');
     }
 
     /**
@@ -66,6 +81,8 @@ class ServiceController extends Controller
      */
     public function destroy(Service $service)
     {
-        //
+        $service->delete();
+
+        return redirect()->route('services.index');
     }
 }

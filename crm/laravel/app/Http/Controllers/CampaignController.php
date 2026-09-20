@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Campaign;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 use App\Models\Channel;
 
 class CampaignController extends Controller
@@ -23,9 +24,11 @@ class CampaignController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): Response
     {
-        //
+        return Inertia::render('Campaigns/Create', [
+            'channels' => Channel::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     /**
@@ -54,9 +57,12 @@ class CampaignController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Campaign $campaign)
+    public function edit(Campaign $campaign): Response
     {
-        //
+        return Inertia::render('Campaigns/Edit', [
+            'campaign' => $campaign,
+            'channels' => Channel::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     /**
@@ -64,7 +70,14 @@ class CampaignController extends Controller
      */
     public function update(Request $request, Campaign $campaign)
     {
-        //
+        $campaign->update($request->validate([
+            'channel_id' => ['required', 'exists:channels,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'promo_code' => ['nullable', 'string', 'max:100'],
+            'budget' => ['nullable', 'numeric', 'min:0'],
+        ]));
+
+        return redirect()->route('campaigns.index');
     }
 
     /**

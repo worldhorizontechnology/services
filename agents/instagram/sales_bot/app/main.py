@@ -1,3 +1,4 @@
+import logging
 import httpx
 from pathlib import Path
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
@@ -6,6 +7,9 @@ from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field, ValidationError
 from app.agent import build_agent_graph
 from app.config import META_PAGE_ACCESS_TOKEN, META_VERIFY_TOKEN, require
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Instagram LLM Microservice Client")
 
@@ -39,6 +43,7 @@ async def send_instagram_reply(igsid: str, text: str):
             )
             response.raise_for_status()
     except Exception as error:
+        logger.exception("Instagram reply failed for %s", igsid)
         raise RuntimeError(f"Instagram reply failed for {igsid}: {error}") from error
 
 async def execute_agent_workflow(igsid: str, text: str, metadata: dict):
@@ -58,6 +63,7 @@ async def execute_agent_workflow(igsid: str, text: str, metadata: dict):
         if isinstance(final_message, str) and final_message.strip():
             await send_instagram_reply(igsid, final_message.strip())
     except Exception as error:
+        logger.exception("Instagram agent workflow failed for %s", igsid)
         raise RuntimeError(f"Instagram agent workflow failed for {igsid}: {error}") from error
 
 
@@ -75,6 +81,7 @@ async def generate_agent_response(igsid: str, text: str) -> str:
         content = result["messages"][-1].content
         return AgentReply(text=content).text
     except Exception as error:
+        logger.exception("Local agent response failed for %s", igsid)
         raise RuntimeError(f"Local agent response failed for {igsid}: {error}") from error
 
 
@@ -88,6 +95,7 @@ async def local_chat_message(payload: LocalChatRequest):
     try:
         return AgentReply(text=await generate_agent_response(payload.igsid, payload.text.strip()))
     except Exception as error:
+        logger.exception("local-chat/message failed for %s", payload.igsid)
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 @app.get("/webhook")
@@ -103,6 +111,7 @@ async def verify_webhook(request: Request):
     except HTTPException:
         raise
     except Exception as error:
+        logger.exception("Webhook verification failed")
         raise HTTPException(status_code=500, detail=f"Webhook verification failed: {error}") from error
 
 @app.post("/webhook")
@@ -154,4 +163,5 @@ async def handle_webhook(request: Request, background_tasks: BackgroundTasks):
     except HTTPException:
         raise
     except Exception as error:
+        logger.exception("Instagram webhook processing failed")
         raise HTTPException(status_code=500, detail=f"Instagram webhook processing failed: {error}") from error

@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict, List
 
 import httpx
@@ -5,6 +6,8 @@ from langchain_core.tools import StructuredTool
 from pydantic import create_model, Field
 
 from app.config import MCP_SERVER_URL
+
+logger = logging.getLogger(__name__)
 
 
 class ExternalMCPClient:
@@ -34,6 +37,7 @@ class ExternalMCPClient:
             response.raise_for_status()
             return response.json(), response.headers.get("Mcp-Session-Id", session_id)
         except Exception as error:
+            logger.exception("MCP HTTP %s failed at %s", method, MCP_SERVER_URL)
             raise RuntimeError(f"MCP HTTP {method} failed at {MCP_SERVER_URL}: {error}") from error
 
     async def _open_session(self, client: httpx.AsyncClient) -> str | None:
@@ -44,8 +48,10 @@ class ExternalMCPClient:
                  "clientInfo": {"name": "instagram-sales-agent", "version": "1.0.0"}},
             )
         except Exception as error:
+            logger.exception("MCP initialize request failed")
             raise RuntimeError(f"MCP initialize request failed: {error}") from error
         if "error" in result:
+            logger.error("MCP initialize failed: %s", result["error"])
             raise RuntimeError(f"MCP initialize failed: {result['error']}")
 
         return session_id
@@ -59,6 +65,7 @@ class ExternalMCPClient:
                     raise RuntimeError(f"MCP tools/list failed: {result['error']}")
                 return result["result"]["tools"]
         except Exception as error:
+            logger.exception("Could not load MCP tools")
             raise RuntimeError(f"Could not load MCP tools: {error}") from error
 
     async def _call_tool(self, name: str, arguments: Dict[str, Any]) -> str:
@@ -71,6 +78,7 @@ class ExternalMCPClient:
                 content = result.get("result", {}).get("content", [])
                 return "\n".join(item.get("text", "") for item in content if item.get("type") == "text")
         except Exception as error:
+            logger.exception("MCP tool call failed for %s", name)
             raise RuntimeError(f"MCP tool call failed for {name}: {error}") from error
 
     async def call_tool(self, name: str, arguments: Dict[str, Any]) -> str:

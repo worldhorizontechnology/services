@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Channel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ChannelController extends Controller
 {
@@ -19,9 +20,9 @@ class ChannelController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): Response
     {
-        //
+        return Inertia::render('Channels/Create');
     }
 
     /**
@@ -48,9 +49,11 @@ class ChannelController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Channel $channel)
+    public function edit(Channel $channel): Response
     {
-        //
+        return Inertia::render('Channels/Edit', [
+            'channel' => $channel,
+        ]);
     }
 
     /**
@@ -58,7 +61,12 @@ class ChannelController extends Controller
      */
     public function update(Request $request, Channel $channel)
     {
-        //
+        $channel->update($request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'in:online,offline'],
+        ]));
+
+        return redirect()->route('channels.index');
     }
 
     /**

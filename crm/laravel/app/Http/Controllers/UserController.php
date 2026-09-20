@@ -26,6 +26,43 @@ class UserController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        return Inertia::render('Users/Create', [
+            'services' => Service::select('id', 'name', 'price')->get(),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+            'role' => 'required|string|in:admin,manager,executor,client',
+            'phone' => 'nullable|string|max:32',
+            'telegram_id' => 'nullable|integer',
+            'telegram_username' => 'nullable|string|max:255',
+            'calendarId' => 'nullable|string|max:255',
+            'instagram_id' => 'nullable|string|max:255',
+            'instagram_username' => 'nullable|string|max:255',
+            'services' => 'nullable|array',
+            'services.*' => 'exists:services,id',
+        ]);
+
+        $user = User::create([
+            ...Arr::except($validated, ['password', 'services']),
+            'password' => bcrypt($validated['password']),
+        ]);
+
+        if (array_key_exists('services', $validated)) {
+            $user->services()->sync($validated['services'] ?? []);
+        }
+
+        return redirect()->route('users.index');
+    }
+
     public function show(User $user): Response
     {
         $user->load('services:id,name,price');

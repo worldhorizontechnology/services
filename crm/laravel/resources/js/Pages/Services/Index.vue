@@ -1,8 +1,14 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 defineProps({ services: { type: Array, default: () => [] } });
+
+function destroyService(id) {
+    if (confirm('Delete this service?')) {
+        router.delete(route('services.destroy', id));
+    }
+}
 </script>
 
 <template>
@@ -11,7 +17,12 @@ defineProps({ services: { type: Array, default: () => [] } });
         <section class="space-y-6">
             <div class="flex items-center justify-between"><div><p class="text-sm text-txt-muted">Services and qualified executors</p></div><Link :href="route('services.create')" class="rounded-xl bg-accent-beige px-4 py-2.5 text-sm font-semibold text-main">Add service</Link></div>
             <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                <article v-for="service in services" :key="service.id" class="rounded-2xl border border-border bg-panel p-6 shadow-xl"><div class="flex items-start justify-between"><span class="rounded bg-accent-pink/10 px-2 py-1 font-mono text-xs text-accent-pink">ID {{ service.id }}</span><strong class="text-lg text-accent-beige">${{ service.price }}</strong></div><h2 class="mt-5 font-bold text-txt-main">{{ service.name }}</h2><p class="mt-2 text-sm text-txt-muted">{{ service.executors?.length || 0 }} qualified executors</p><span class="mt-6 inline-block rounded-full border border-accent-pink/20 bg-accent-pink/10 px-2.5 py-1 text-xs text-accent-pink">{{ service.is_active ? 'Active' : 'Inactive' }}</span></article>
+                <article v-for="service in services" :key="service.id" class="rounded-2xl border border-border bg-panel p-6 shadow-xl"><div class="flex items-start justify-between"><span class="rounded bg-accent-pink/10 px-2 py-1 font-mono text-xs text-accent-pink">ID {{ service.id }}</span><strong class="text-lg text-accent-beige">${{ service.price }}</strong></div><h2 class="mt-5 font-bold text-txt-main">{{ service.name }}</h2><p class="mt-2 text-sm text-txt-muted">{{ service.executors?.length || 0 }} qualified executors</p><span class="mt-6 inline-block rounded-full border border-accent-pink/20 bg-accent-pink/10 px-2.5 py-1 text-xs text-accent-pink">{{ service.is_active ? 'Active' : 'Inactive' }}</span>
+                    <div class="mt-4 flex items-center gap-4 border-t border-border pt-4 text-xs">
+                        <Link :href="route('services.edit', service.id)" class="text-accent-beige hover:underline">Edit</Link>
+                        <button type="button" class="text-accent-pink hover:underline" @click="destroyService(service.id)">Delete</button>
+                    </div>
+                </article>
                 <div v-if="!services.length" class="rounded-2xl border border-dashed border-border p-10 text-center text-txt-muted md:col-span-2 xl:col-span-3">No services yet.</div>
             </div>
         </section>

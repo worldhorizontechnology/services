@@ -1,3 +1,4 @@
+import logging
 from typing import TypedDict, Annotated
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
@@ -8,6 +9,8 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from app.mcp_connector import ExternalMCPClient
 from app.rag import WorkspaceRAG
 from app.config import GEMINI_API_KEY, require
+
+logger = logging.getLogger(__name__)
 
 class AgentState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
@@ -25,13 +28,13 @@ async def build_agent_graph():
         tools = await mcp_client.fetch_langchain_tools()
         rag = WorkspaceRAG(mcp_client)
     except Exception as error:
+        logger.exception("Could not initialize agent MCP/RAG dependencies")
         raise RuntimeError(f"Could not initialize agent MCP/RAG dependencies: {error}") from error
     
     # Initialize Gemini model with active MCP tools
     llm = ChatGoogleGenerativeAI(
         model="gemini-3.5-flash-lite", 
-        temperature=0.2,
-        google_api_key=require(GEMINI_API_KEY, "GEMINI_API_KEY")
+        google_api_key=require(GEMINI_API_KEY, "GEMINI_API_KEY"), 
     )
     llm_with_tools = llm.bind_tools(tools)
     
@@ -82,6 +85,7 @@ async def build_agent_graph():
             response = await llm_with_tools.ainvoke([sys_msg] + state["messages"])
             return {"messages": [response], "workspace_context": workspace_context}
         except Exception as error:
+            logger.exception("Gemini agent invocation failed")
             raise RuntimeError(f"Gemini agent invocation failed: {error}") from error
 
     # LangGraph construction

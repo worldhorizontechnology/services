@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import math
 import re
 from typing import Any
@@ -9,6 +10,8 @@ from pydantic import BaseModel, Field, ValidationError
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 from app.mcp_connector import ExternalMCPClient
+
+logger = logging.getLogger(__name__)
 
 
 class WorkspaceRAG:
@@ -26,6 +29,7 @@ class WorkspaceRAG:
             payload = WorkspaceSearchResult.model_validate_json(raw_result)
             chunks = self._build_chunks([match.model_dump() for match in payload.matches])
         except Exception as error:
+            logger.exception("Workspace RAG retrieval failed")
             raise RuntimeError(f"Workspace RAG retrieval failed: {error}") from error
 
         if not chunks:
@@ -34,6 +38,7 @@ class WorkspaceRAG:
         try:
             ranked_chunks = await self._rank_by_embeddings(query, chunks)
         except Exception:
+            logger.exception("Embedding ranking failed, falling back to term ranking")
             ranked_chunks = self._rank_by_terms(query, chunks)
 
         return self._format_context(ranked_chunks)
