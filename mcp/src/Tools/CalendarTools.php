@@ -49,18 +49,18 @@ class CalendarTools
                 }
             }
 
-            $query = 'SELECT DISTINCT u.google_calendar_id FROM users u';
+            $query = 'SELECT DISTINCT u.calendarId FROM users u';
             $params = [];
 
             if ($serviceId !== null) {
                 $query .= ' JOIN service_user su ON u.id = su.user_id '
-                    . 'WHERE su.service_id = :serviceId AND u.google_calendar_id IS NOT NULL AND u.is_active = 1';
+                    . 'WHERE su.service_id = :serviceId AND u.calendarId IS NOT NULL AND u.is_active = 1';
                 $params['serviceId'] = $serviceId;
             } elseif ($masterId !== null) {
-                $query .= ' WHERE u.id = :masterId AND u.google_calendar_id IS NOT NULL AND u.is_active = 1';
+                $query .= ' WHERE u.id = :masterId AND u.calendarId IS NOT NULL AND u.is_active = 1';
                 $params['masterId'] = $masterId;
             } else {
-                $query .= ' WHERE u.google_calendar_id IS NOT NULL AND u.is_active = 1';
+                $query .= ' WHERE u.calendarId IS NOT NULL AND u.is_active = 1';
             }
 
             // Fetch flat array of calendar IDs
@@ -116,7 +116,7 @@ class CalendarTools
             if (empty($resolvedCalendarId)) {
                 if ($masterId !== null) {
                     $resolvedCalendarId = $this->connection->fetchOne(
-                        'SELECT google_calendar_id FROM users WHERE id = :masterId AND is_active = 1 AND google_calendar_id IS NOT NULL',
+                        'SELECT calendarId FROM users WHERE id = :masterId AND is_active = 1 AND calendarId IS NOT NULL',
                         ['masterId' => $masterId]
                     );
 
@@ -140,12 +140,12 @@ class CalendarTools
 
                     // Retrieve the first available calendar ID of an active master assigned to this service
                     $resolvedCalendarId = $this->connection->fetchOne(
-                        'SELECT u.google_calendar_id '
+                        'SELECT u.calendarId '
                         . 'FROM users u '
                         . 'JOIN service_user su ON u.id = su.user_id '
                         . 'WHERE su.service_id = :serviceId '
                         . 'AND u.is_active = 1 '
-                        . 'AND u.google_calendar_id IS NOT NULL '
+                        . 'AND u.calendarId IS NOT NULL '
                         . 'LIMIT 1',
                         ['serviceId' => $serviceId]
                     );

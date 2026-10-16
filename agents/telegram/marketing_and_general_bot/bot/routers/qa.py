@@ -1,4 +1,4 @@
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.types import Message
 from services.ai_service import ai_service
 from config import SUPERGROUP_ID

@@ -11,6 +11,7 @@ use App\Models\Service;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class McpIntegrationController extends Controller
 {
@@ -115,25 +116,32 @@ class McpIntegrationController extends Controller
 
     public function findMastersForService(Request $request, int $serviceId): JsonResponse
     {
+        // 1. ПРОВЕРКА ВХОДА: Пишет в лог при каждом HTTP-запросе к эндпоинту
+        Log::info('=== MCP findMastersForService CALLED ===', ['service_id' => $serviceId]);
         $this->authorizeMcp($request);
         $request->validate([
             'service_id' => ['nullable', 'integer'],
         ]);
 
         $service = Service::query()
-                ->with(['executors:id,first_name,last_name,google_calendar_id,is_active'])
+                ->with('executors')
             ->findOrFail($serviceId);
-
-            $masters = $service->executors
+        
+        // 2. ДИАГНОСТИКА БАЗЫ: Смотрим, кого Laravel достал из pivot-таблицы service_user ДО фильтрации
+        Log::info('Raw executors from DB:', ['executors' => $service->executors->toArray()]);
+        $masters = $service->executors
             ->where('is_active', true)
-            ->whereNotNull('google_calendar_id')
             ->values()
             ->map(static fn ($user): array => [
                 'master_id' => $user->id,
                 'master_name' => trim($user->first_name . ' ' . ($user->last_name ?? '')),
-                'calendar_id' => $user->google_calendar_id,
+                // Берём calendarId из БД (или google_calendar_id / primary как запасной)
+                'calendar_id' => $user->calendarId ?? $user->google_calendar_id ?? 'primary',
+                
             ]);
-
+        
+        // 3. ПРОВЕРКА ИТОГА: Смотрим, что уходит в JSON
+        Log::info('Final masters payload:', ['masters' => $masters->toArray()]);
         return response()->json([
             'service_id' => $service->id,
             'service_name' => $service->name,

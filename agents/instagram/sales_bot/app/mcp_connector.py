@@ -21,6 +21,7 @@ class ExternalMCPClient:
         params: Dict[str, Any] | None = None,
         session_id: str | None = None,
     ) -> tuple[dict[str, Any], str | None]:
+        logger.info(">>> MCP METHOD: %s | PARAMS: %s", method, params)
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json, text/event-stream",
@@ -35,6 +36,7 @@ class ExternalMCPClient:
                 json={"jsonrpc": "2.0", "id": request_id, "method": method, "params": params or {}},
             )
             response.raise_for_status()
+            logger.info("<<< MCP RESP [%s] | Method: %s | Data: %s", response.status_code, method, response.json())
             return response.json(), response.headers.get("Mcp-Session-Id", session_id)
         except Exception as error:
             logger.exception("MCP HTTP %s failed at %s", method, MCP_SERVER_URL)
@@ -63,6 +65,8 @@ class ExternalMCPClient:
                 result, _ = await self._request(client, 2, "tools/list", session_id=session_id)
                 if "error" in result:
                     raise RuntimeError(f"MCP tools/list failed: {result['error']}")
+                tools = result["result"]["tools"]
+                logger.info("=== MCP DISCOVERED TOOLS (%d): %s ===", len(tools), [t.get("name") for t in tools])
                 return result["result"]["tools"]
         except Exception as error:
             logger.exception("Could not load MCP tools")
@@ -76,6 +80,8 @@ class ExternalMCPClient:
                 if "error" in result:
                     raise RuntimeError(f"MCP tool {name} failed: {result['error']}")
                 content = result.get("result", {}).get("content", [])
+                output = "\n".join(item.get("text", "") for item in content if item.get("type") == "text")
+                logger.info("<<< MCP TOOL OUTPUT [%s]: %s", name, output[:300])
                 return "\n".join(item.get("text", "") for item in content if item.get("type") == "text")
         except Exception as error:
             logger.exception("MCP tool call failed for %s", name)
@@ -83,6 +89,7 @@ class ExternalMCPClient:
 
     async def call_tool(self, name: str, arguments: Dict[str, Any]) -> str:
         """Call one MCP tool directly for agent-side retrieval or orchestration."""
+        logger.info(">>> LANGCHAIN TRIGGERED TOOL [%s] WITH ARGS: %s", name, arguments)
         return await self._call_tool(name, arguments)
 
     @staticmethod

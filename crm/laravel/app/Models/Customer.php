@@ -29,6 +29,13 @@ class Customer extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function routeNotificationForTelegram()
+    {
+        return [
+            'chat_id' => env('TELEGRAM_CHAT_ID'),
+            'message_thread_id' => env('TELEGRAM_CUSTOMER_TOPIC_ID'),
+        ];
+    }
     protected static function booted() 
     {
         static::created(function (Customer $customer) {

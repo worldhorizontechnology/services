@@ -79,6 +79,14 @@ async def generate_agent_response(igsid: str, text: str) -> str:
             "workspace_context": "",
         })
         content = result["messages"][-1].content
+        # Normalize content to a string if it's a list of blocks or any other type.
+        if isinstance(content, list):
+            content = "".join(
+                block.get("text", "") if isinstance(block, dict) else str(block)
+                for block in content
+            )
+        else:
+            content = str(content)
         return AgentReply(text=content).text
     except Exception as error:
         logger.exception("Local agent response failed for %s", igsid)
