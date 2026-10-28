@@ -32,6 +32,7 @@ class TelegramNotification extends Notification implements ShouldQueue
             $this->model instanceof Customer => $this->customerNotification(),
             $this->model instanceof Order => $this->orderNotification(),
             $this->model instanceof Payment => $this->paymentNotification(),
+            $this->model instanceof MarketingAnalyticsSnapshot => $this->analyticsNotification(),
         };
     }
 
@@ -102,5 +103,24 @@ class TelegramNotification extends Notification implements ShouldQueue
     {
         return $user->telegram_username;
            
+    }
+
+    private function analyticsNotification(): TelegramMessage
+    {
+        $rawPayload = json_encode([
+        'type' => 'marketing_analytics',
+        'period_date' => $this->model->period_date->toDateString(),
+        'revenue' => $this->model->total_revenue,
+        'leads' => $this->model->new_leads_count,
+        'conversion' => $this->model->conversion_rate,
+        'services' => $this->model->services_breakdown, // массив услуг для графика
+        'cac' => $this->model->cac,
+        'roas' => $this->model->roas,
+        ], JSON_UNESCAPED_UNICODE);
+
+         return TelegramMessage::create()
+        ->to(config('services.telegram.chat_id'))
+        ->messageThreadId(config('services.telegram.topics.analytics')) // топик аналитики
+        ->content("```json\n{$rawPayload}\n```"); // оборачиваем в код, чтобы боту было удобно парсить
     }
 }
